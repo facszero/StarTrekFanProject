@@ -153,3 +153,104 @@ const Sprites = (() => {
     },
   };
 })();
+
+// ── Patch: inject ROM/KLI atlases and load helpers after initial module ──
+// These are appended here so the main IIFE stays clean.
+// Access via Sprites.ROM, Sprites.KLI, Sprites.drawRomulan(), Sprites.drawKlingon()
+
+Sprites.ROM = {
+  // ── Valdore-class Warbird ─────────────────────────────────────────
+  valdore_frente   : [ 550,  51, 191,  66],  // Head-on approach (main enemy)
+  valdore_rear     : [ 779,  50, 203,  60],  // Rear view
+  valdore_arriba_a : [ 552, 151, 186, 121],  // Top view A
+  valdore_arriba_b : [ 787, 152, 187, 121],  // Top view B
+  valdore_angle    : [1026, 174, 226, 110],  // Ángulo
+  // ── D'deridex Warbird ────────────────────────────────────────────
+  dderidex_frente  : [ 538, 323, 213,  70],  // Head-on (wide wingspan)
+  dderidex_rear    : [ 777, 320, 210,  63],
+  dderidex_angle   : [1018, 325, 213,  80],
+  dderidex_arriba_a: [ 539, 432, 211, 101],
+  dderidex_arriba_b: [ 777, 434, 210, 100],
+  dderidex_angle_b : [1020, 441, 200, 110],
+  // ── Scimitar-class Thalaron ──────────────────────────────────────
+  scimitar_frente  : [ 557, 602, 167,  45],  // Head-on (wide + flat)
+  scimitar_rear    : [ 770, 603, 168,  45],
+  scimitar_arriba_a: [ 554, 690, 174, 116],
+  scimitar_arriba_b: [ 769, 690, 174, 116],
+  scimitar_angle   : [1015, 586, 181, 103],
+  scimitar_angle_b : [  39, 716, 225, 104],
+  scimitar_angle_c : [ 295, 710, 155, 109],
+  scimitar_angle_d : [1011, 716, 195, 106],
+  scimitar_side    : [  20, 580, 237, 103],
+  scimitar_small   : [ 325, 617, 113,  68],
+};
+
+Sprites.KLI = {
+  // ── Vor'cha-class Attack Cruiser ─────────────────────────────────
+  vorcha_frente    : [ 494, 195, 168,  81],  // Head-on
+  vorcha_arriba    : [ 296, 194, 176,  86],  // Top view
+  vorcha_angle     : [  18, 190, 253, 111],  // Ángulo
+  vorcha_large     : [  50, 315, 251, 183],  // Large angle (close pass)
+  vorcha_large_b   : [ 344, 331, 267, 183],
+  // ── Negh'Var-class Warship ───────────────────────────────────────
+  neghvar_frente   : [ 940, 197, 134,  80],  // Head-on
+  neghvar_angle    : [ 678, 201, 253, 101],  // Ángulo
+  neghvar_arriba   : [ 710, 331, 254, 148],  // Top view
+  neghvar_large    : [1013, 324, 233, 182],  // Large (boss approach)
+  neghvar_large_b  : [ 763, 540, 228, 184],
+  neghvar_small    : [1101, 198, 149,  79],
+  // ── B'rel-class Bird-of-Prey ─────────────────────────────────────
+  brel_frente      : [ 291, 588, 191,  87],  // Head-on (better than enemy_sheet)
+  brel_frente_b    : [ 517, 589, 190,  88],
+  brel_dive        : [1029, 582, 218,  66],  // Diving attack angle
+  brel_angle       : [  34, 709, 231, 128],  // Ángulo
+  brel_angle_b     : [ 341, 714, 214, 114],
+  brel_large       : [  20, 569, 231, 132],  // Large angle
+  brel_small       : [1104, 716, 127, 117],
+  // ── Weapons & FX ─────────────────────────────────────────────────
+  exp_a            : [ 833, 738, 111,  85],  // Explosion A (orange)
+  exp_b            : [ 962, 723, 117, 100],  // Explosion B (bright)
+  torpedo_beam     : [ 624, 776, 155,  14],  // Torpedo/disruptor beam
+};
+
+// Draw helpers for the new sheets
+Sprites.drawRomulan = function(ctx, name, cx, cy, scale, rot, flipX) {
+  const img = Sprites.sheets.romulan;
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const r = Sprites.ROM[name]; if (!r) return false;
+  const dw = r[2]*scale, dh = r[3]*scale;
+  ctx.save(); ctx.translate(cx, cy);
+  if (rot)   ctx.rotate(rot);
+  if (flipX) ctx.scale(-1, 1);
+  ctx.drawImage(img, r[0], r[1], r[2], r[3], -dw/2, -dh/2, dw, dh);
+  ctx.restore(); return true;
+};
+
+Sprites.drawKlingon = function(ctx, name, cx, cy, scale, rot, flipX) {
+  const img = Sprites.sheets.klingon;
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const r = Sprites.KLI[name]; if (!r) return false;
+  const dw = r[2]*scale, dh = r[3]*scale;
+  ctx.save(); ctx.translate(cx, cy);
+  if (rot)   ctx.rotate(rot);
+  if (flipX) ctx.scale(-1, 1);
+  ctx.drawImage(img, r[0], r[1], r[2], r[3], -dw/2, -dh/2, dw, dh);
+  ctx.restore(); return true;
+};
+
+// Extend Sprites.load to include the new sheets
+(function() {
+  const _origLoad = Sprites.load.bind(Sprites);
+  Sprites.load = function(base) {
+    _origLoad(base);
+    const mk = (key, file) => {
+      const img = new Image();
+      img.onload  = () => { };
+      img.onerror = () => console.warn('Sprite load failed:', file);
+      img.src     = base + file;
+      Sprites.sheets[key] = img;
+    };
+    mk('romulan', 'romulan_sheet.png');
+    mk('klingon', 'klingon_sheet.png');
+  };
+})();
