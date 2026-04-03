@@ -154,15 +154,26 @@ class Enemy {
     this.sy    = this.spawnY;
     this.scale = 0.02;
 
-    this.hp     = type === 'borg' ? 210 : 30;
+    this.hp     = type === 'borg'        ? 210
+                : type === 'borg_sphere' ? 150
+                : type === 'borg_scout'  ?  45
+                : type === 'borg_assimil'? 380
+                : 30;
     this.maxHp  = this.hp;
-    this.points = type === 'borg' ? 500 : 100;
+    this.points = type === 'borg'        ? 500
+                : type === 'borg_sphere' ? 350
+                : type === 'borg_scout'  ? 120
+                : type === 'borg_assimil'? 1000
+                : 100;
+    this.firing = false;   // used by assimil beam state
 
     this.dead          = false;
     this.readyToRemove = false;
     this.exploding     = false;
     this.exTimer       = 0;
-    this.exMax         = type === 'borg' ? 1.2 : .75;
+    this.exMax         = (type === 'borg' || type === 'borg_assimil') ? 1.4
+                       : type === 'borg_sphere' ? 1.1
+                       : .75;
     this.tick          = 0;
   }
 
@@ -175,7 +186,8 @@ class Enemy {
       this.hp        = 0;
       this.dead      = true;
       this.exploding = true;
-      Particles.explode(this.sx, this.sy, 55 + this.scale * 80);
+      const isBig = type === 'borg' || type === 'borg_assimil';
+      Particles.explode(this.sx, this.sy, 55 + this.scale * (isBig ? 110 : 70));
     }
   }
 
@@ -207,7 +219,11 @@ class Enemy {
       const lateralDist = Math.abs(this.sx - Player.x);
       const verticalDist = Math.abs(this.sy - Player.y);
       if (lateralDist < 95 && verticalDist < 80) {
-        Player.takeHit(this.type === 'borg' ? 35 : 22);
+        const dmg = this.type === 'borg_assimil' ? 50
+                : this.type === 'borg'         ? 35
+                : this.type === 'borg_sphere'  ? 28
+                : 22;
+      Player.takeHit(dmg);
       }
       this.dead          = true;
       this.readyToRemove = true;
@@ -223,8 +239,11 @@ class Enemy {
       return;
     }
 
-    if      (this.type === 'bop')  Draw.birdOfPrey(ctx, this.sx, this.sy, this.scale * .72);
-    else if (this.type === 'borg') Draw.borgCube  (ctx, this.sx, this.sy, this.scale,  this.tick);
+    if      (this.type === 'bop')         Draw.birdOfPrey (ctx, this.sx, this.sy, this.scale * .72);
+    else if (this.type === 'borg')        Draw.borgCube   (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'borg_sphere') Draw.borgSphere (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'borg_scout')  Draw.borgScout  (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'borg_assimil')Draw.borgAssimil(ctx, this.sx, this.sy, this.scale, this.tick, this.firing);
 
     // HP bar
     if (this.hp < this.maxHp && this.scale > .12) {
@@ -282,6 +301,26 @@ const Enemies = (() => {
         {type:'borg', wx:   0, speed:CFG.BORG_SPEED_BASE + n*40, delay:3000},
         {type:'bop',  wx:-180, speed:sp*1.2, delay:4200},
         {type:'bop',  wx: 180, speed:sp*1.2, delay:4200},
+      ],
+      // Wave 5 — Borg Spheres + Scouts
+      [
+        {type:'borg_scout',  wx:-300, speed:sp*1.6},
+        {type:'borg_scout',  wx: 300, speed:sp*1.6, delay:300},
+        {type:'borg_scout',  wx:   0, speed:sp*1.6, delay:800},
+        {type:'borg_sphere', wx:-160, speed:CFG.BORG_SPEED_BASE+n*35, delay:2200},
+        {type:'borg_sphere', wx: 160, speed:CFG.BORG_SPEED_BASE+n*35, delay:2200},
+        {type:'borg_scout',  wx:-400, speed:sp*1.7, delay:3800},
+        {type:'borg_scout',  wx: 400, speed:sp*1.7, delay:3800},
+      ],
+      // Wave 6 — Assimilation Ship + escort
+      [
+        {type:'borg_scout',  wx:-350, speed:sp*1.5},
+        {type:'borg_scout',  wx: 350, speed:sp*1.5, delay:400},
+        {type:'borg_sphere', wx:-200, speed:CFG.BORG_SPEED_BASE+n*30, delay:1800},
+        {type:'borg_sphere', wx: 200, speed:CFG.BORG_SPEED_BASE+n*30, delay:1800},
+        {type:'borg_assimil',wx:   0, speed:CFG.BORG_SPEED_BASE*0.7,  delay:4500},
+        {type:'borg_scout',  wx:-150, speed:sp*1.6, delay:5500},
+        {type:'borg_scout',  wx: 150, speed:sp*1.6, delay:5500},
       ],
     ];
     const template = waves[Math.min(n-1, waves.length-1)];
