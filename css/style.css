@@ -28,6 +28,8 @@ body {
   height: auto;
   aspect-ratio: 16/9;
   image-rendering: auto;
+  touch-action: none;       /* prevent browser scroll/zoom on canvas touch */
+  will-change: contents;    /* hint compositor to promote canvas to own layer */
 }
 
 /* ═══════════════════════════════════════════════════════

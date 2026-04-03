@@ -107,20 +107,12 @@ const Background = (() => {
         }
       }
 
-      // ── subtle scanline vignette ──
-      ctx.save();
-      ctx.globalAlpha = .07;
-      for (let sy = 0; sy < CFG.H; sy += 3) {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, sy, CFG.W, 1);
-      }
+      // ── vignette (single pass, no scanlines loop) ──
       const vign = ctx.createRadialGradient(cx, CFG.H/2, CFG.H*.25, cx, CFG.H/2, CFG.H*.85);
       vign.addColorStop(0, 'transparent');
       vign.addColorStop(1, 'rgba(0,0,0,.55)');
-      ctx.globalAlpha = 1;
       ctx.fillStyle = vign;
       ctx.fillRect(0, 0, CFG.W, CFG.H);
-      ctx.restore();
     }
   };
 })();

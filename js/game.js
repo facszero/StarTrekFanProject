@@ -2,17 +2,28 @@
 
 const Game = (() => {
   let canvas, ctx;
-  let state  = 'TITLE'; // TITLE | PLAYING | PAUSED | GAME_OVER
+  let state  = 'TITLE';
   let score  = 0;
   let wave   = 1;
   let dt     = 0, lastTs = 0;
   let keys   = {};
   let scaleX = 1, scaleY = 1;
-  let titleTick = 0;
+  let canvasRect = { left:0, top:0, width:1280, height:720 };
+  let titleTick  = 0;
+
+  // ── Canvas rect cache — updated on resize/orientationchange only ─
+  // NEVER call getBoundingClientRect() inside event handlers (causes reflow)
+  function refreshRect() {
+    canvasRect = canvas.getBoundingClientRect();
+    scaleX = CFG.W / (canvasRect.width  || CFG.W);
+    scaleY = CFG.H / (canvasRect.height || CFG.H);
+  }
 
   // ── Input ────────────────────────────────────────────────────────
-  function onMove(ex, ey) {
-    Player.setTarget(ex * scaleX, ey * scaleY);
+  function onMove(clientX, clientY) {
+    const ex = (clientX - canvasRect.left) * scaleX;
+    const ey = (clientY - canvasRect.top)  * scaleY;
+    Player.setTarget(ex, ey);
   }
 
   function onFire() {
@@ -25,43 +36,39 @@ const Game = (() => {
   }
 
   function setupInput() {
-    const rect = () => canvas.getBoundingClientRect();
-
     canvas.addEventListener('mousemove', e => {
-      const r = rect(); onMove(e.clientX - r.left, e.clientY - r.top);
+      onMove(e.clientX, e.clientY);
     });
     canvas.addEventListener('click', () => onStart());
 
     canvas.addEventListener('touchmove', e => {
       e.preventDefault();
-      const r = rect();
-      onMove(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
-    }, {passive:false});
+      if (!e.touches.length) return;
+      onMove(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive: false});
 
     canvas.addEventListener('touchstart', e => {
       e.preventDefault();
-      const r = rect();
-      onMove(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+      refreshRect();  // refresh only on touch begin (layout may have shifted)
+      if (!e.touches.length) return;
+      onMove(e.touches[0].clientX, e.touches[0].clientY);
       if (state === 'PLAYING') Player.fireTorpedo();
       else onStart();
-    }, {passive:false});
+    }, {passive: false});
 
     document.addEventListener('keydown', e => {
       keys[e.code] = true;
       if (e.code === 'Space') { e.preventDefault(); onFire(); }
       if (e.code === 'Enter') onStart();
       if (e.code === 'Escape') {
-        if (state === 'PLAYING')  state = 'PAUSED';
-        else if (state === 'PAUSED') state = 'PLAYING';
+        if      (state === 'PLAYING') state = 'PAUSED';
+        else if (state === 'PAUSED')  state = 'PLAYING';
       }
     });
     document.addEventListener('keyup', e => { keys[e.code] = false; });
-  }
 
-  function updateScale() {
-    const r = canvas.getBoundingClientRect();
-    scaleX = CFG.W / (r.width  || CFG.W);
-    scaleY = CFG.H / (r.height || CFG.H);
+    window.addEventListener('resize',              refreshRect, {passive: true});
+    window.addEventListener('orientationchange',   () => setTimeout(refreshRect, 300), {passive: true});
   }
 
   // ── Game flow ────────────────────────────────────────────────────
@@ -84,15 +91,18 @@ const Game = (() => {
       HUD.alert(`WAVE ${String(wave).padStart(2,'0')} — INCOMING`, 3000), 120);
   }
 
-  // ── Collision (enemy passes player zone) handled inside entities ──
-
   // ── Main loop ────────────────────────────────────────────────────
   function loop(ts) {
     dt = Math.min((ts - lastTs) / 1000, .05);
     lastTs = ts;
 
-    update();
-    render();
+    try {
+      update();
+      render();
+    } catch (err) {
+      console.error('[GameLoop]', err);
+    }
+
     requestAnimationFrame(loop);
   }
 
@@ -114,21 +124,16 @@ const Game = (() => {
   // ── Render helpers ───────────────────────────────────────────────
   function renderTitle() {
     const cx = CFG.W / 2;
-
-    // Dark overlay
     ctx.fillStyle = 'rgba(0,0,12,.72)';
     ctx.fillRect(0, 0, CFG.W, CFG.H);
 
-    // USS Enterprise-D in center (slowly banking)
     const bank = Math.sin(titleTick * .5) * .12;
-    Draw.enterprise(ctx, cx, 310, 1.1, bank);
+    Draw.enterprise(ctx, cx, 310, 1.1, bank, 0);
 
-    // Thruster glow
-    const tg = ctx.createRadialGradient(cx, 318, 0, cx, 318, 55);
-    tg.addColorStop(0, 'rgba(80,140,255,.45)'); tg.addColorStop(1,'transparent');
+    const tg = ctx.createRadialGradient(cx,318,0, cx,318,55);
+    tg.addColorStop(0,'rgba(80,140,255,.45)'); tg.addColorStop(1,'transparent');
     ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(cx,318,55,0,Math.PI*2); ctx.fill();
 
-    // Title text
     ctx.save();
     ctx.shadowColor='#4488ff'; ctx.shadowBlur=28;
     ctx.fillStyle='#aaccff'; ctx.font='bold 15px "Courier New"';
@@ -148,16 +153,14 @@ const Game = (() => {
     ctx.fillText('USS Enterprise-D  ·  Tactical Engagement Simulator', cx, 212);
     ctx.fillText('Fan Project — Not for Commercial Use', cx, 232);
 
-    // Blinking prompt
     if (Math.sin(Date.now()/480) > 0) {
       ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 16px "Courier New"';
-      ctx.fillText('[ PRESS SPACE OR CLICK TO ENGAGE ]', cx, 448);
+      ctx.fillText('[ PRESS SPACE OR TAP TO ENGAGE ]', cx, 448);
     }
 
-    // Controls legend
     ctx.fillStyle=U.rgba(CFG.C.DIM,.85); ctx.font='12px "Courier New"';
-    ctx.fillText('MOUSE / ← → ↑ ↓ KEYS  :  Full helm control (lateral + vertical)', cx, 500);
-    ctx.fillText('SPACE / TAP             :  Launch photon torpedo  (auto-phasers always active)', cx, 521);
+    ctx.fillText('MOUSE / ← → ↑ ↓ KEYS  :  Full helm control', cx, 500);
+    ctx.fillText('SPACE / TAP             :  Launch photon torpedo', cx, 521);
     ctx.fillText('ESC                     :  Tactical pause', cx, 542);
     ctx.textAlign='left';
   }
@@ -183,9 +186,9 @@ const Game = (() => {
     ctx.textAlign='center';
     ctx.fillText('FINAL SCORE: '+String(score).padStart(7,'0'), CFG.W/2, CFG.H/2+24);
 
-    if (Math.sin(Date.now()/580)>0) {
+    if (Math.sin(Date.now()/580) > 0) {
       ctx.fillStyle=CFG.C.TEXT; ctx.font='17px "Courier New"';
-      ctx.fillText('[ PRESS SPACE TO TRY AGAIN ]', CFG.W/2, CFG.H/2+86);
+      ctx.fillText('[ TAP OR PRESS SPACE TO TRY AGAIN ]', CFG.W/2, CFG.H/2+86);
     }
     ctx.textAlign='left';
   }
@@ -206,12 +209,9 @@ const Game = (() => {
     if (state === 'GAME_OVER') renderGameOver();
   }
 
-  // ── Public API ───────────────────────────────────────────────────
+  // ── Public ───────────────────────────────────────────────────────
   return {
-    addScore(pts) {
-      score += pts;
-      // HUD floating label would need screen coords — called from weapons.js
-    },
+    addScore(pts) { score += pts; },
 
     init() {
       canvas = document.getElementById('gameCanvas');
@@ -219,12 +219,9 @@ const Game = (() => {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
-      // Load sprite sheets (async – canvas fallback used until ready)
       Sprites.load('assets/sprites/');
-
       setupInput();
-      updateScale();
-      window.addEventListener('resize', updateScale);
+      refreshRect();   // initial measurement after layout
 
       Background.init();
       Player.init();
@@ -233,7 +230,7 @@ const Game = (() => {
       Particles.init();
       HUD.init();
 
-      requestAnimationFrame(ts => { lastTs = ts; loop(ts); });
+      requestAnimationFrame(ts => { lastTs = ts; requestAnimationFrame(loop); });
     }
   };
 })();
