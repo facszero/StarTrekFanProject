@@ -168,9 +168,10 @@ const HUD = (() => {
     ctx.beginPath();ctx.moveTo(rx-rr,ry);ctx.lineTo(rx+rr,ry);ctx.stroke();
     ctx.beginPath();ctx.moveTo(rx,ry-rr);ctx.lineTo(rx,ry+rr);ctx.stroke();
 
-    // Player dot
+    // Player dot — Y position reflects actual vertical position
+    const playerRadarY = ry + ((Player.y - CFG.PLAYER_Y0) / (CFG.PLAYER_Y_MAX - CFG.PLAYER_Y_MIN)) * rr * .6;
     ctx.fillStyle=CFG.C.BLUE;
-    ctx.beginPath(); ctx.arc(rx,ry+rr*.65,3.5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(rx, playerRadarY, 3.5, 0, Math.PI*2); ctx.fill();
 
     // Enemy dots
     for(const e of Enemies.list){

@@ -15,9 +15,15 @@ const CFG = {
 
   // ── Player ──────────────────────────────────────────────────────────────
   PLAYER_X0:        640,   // default x
+  PLAYER_Y0:        582,   // default y
+  PLAYER_Y_MIN:     312,   // horizon(252) + 60px perspective margin
+  PLAYER_Y_MAX:     610,   // bottom bar(640) − 30px margin
   PLAYER_SPEED:     520,   // px/s lateral
+  PLAYER_SPEED_Y:   340,   // px/s vertical (slightly tighter than lateral)
   PLAYER_BANK_RATE:  4.5,
   PLAYER_MAX_BANK:   0.28,
+  PLAYER_PITCH_RATE: 3.2,
+  PLAYER_MAX_PITCH:  0.14, // forward/backward tilt radians
 
   PHASER_INTERVAL:  95,    // ms between auto phaser shots
   TORPEDO_MAX:      15,

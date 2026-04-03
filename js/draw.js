@@ -8,15 +8,17 @@ const Draw = {
   // ══════════════════════════════════════════════════════════════
   //  USS ENTERPRISE-D
   // ══════════════════════════════════════════════════════════════
-  enterprise(ctx, cx, cy, scale, bank) {
+  enterprise(ctx, cx, cy, scale, bank, pitch) {
     // bankNorm: 0 = hard-left, 0.5 = straight, 1 = hard-right
     const bankNorm = U.clamp((bank + CFG.PLAYER_MAX_BANK) / (CFG.PLAYER_MAX_BANK * 2), 0, 1);
 
     if (Sprites.drawPlayer(ctx, cx, cy, scale, bankNorm)) {
-      this._thruster(ctx, cx, cy, scale);
+      // Sprite-based: apply subtle scale-Y squish to simulate pitch
+      // (already drawn; we can't re-draw, so pitch is shown via thruster offset)
+      this._thruster(ctx, cx, cy + (pitch || 0) * 12 * scale, scale);
       return;
     }
-    this._enterpriseCanvas(ctx, cx, cy, scale, bank);
+    this._enterpriseCanvas(ctx, cx, cy, scale, bank, pitch || 0);
   },
 
   _thruster(ctx, cx, cy, scale) {
@@ -27,8 +29,10 @@ const Draw = {
     ctx.beginPath(); ctx.arc(cx, cy+14*scale, 32*scale, 0, Math.PI*2); ctx.fill();
   },
 
-  _enterpriseCanvas(ctx, cx, cy, scale, bank) {
-    ctx.save(); ctx.translate(cx,cy); ctx.rotate(bank*.14); ctx.scale(scale,scale);
+  _enterpriseCanvas(ctx, cx, cy, scale, bank, pitch) {
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(bank*.14);
+    // Pitch: squish Y axis slightly (nose up/down illusion)
+    ctx.scale(scale, scale * (1 + pitch * 0.35));
     const c={hull:'#bcc9d6',hullLt:'#cfdde8',hullDk:'#7a8a9a',panel:'#a8b8c4',
       nacelle:'#96a8b8',band:'#cc4400',glow:'#449aff',glowLt:'#88ccff',
       imp:'#ff5500',impLt:'#ffaa44',det:'#697a8a'};

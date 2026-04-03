@@ -11,8 +11,8 @@ const Game = (() => {
   let titleTick = 0;
 
   // ── Input ────────────────────────────────────────────────────────
-  function onMove(ex) {
-    Player.setTargetX(ex * scaleX);
+  function onMove(ex, ey) {
+    Player.setTarget(ex * scaleX, ey * scaleY);
   }
 
   function onFire() {
@@ -28,20 +28,20 @@ const Game = (() => {
     const rect = () => canvas.getBoundingClientRect();
 
     canvas.addEventListener('mousemove', e => {
-      const r = rect(); onMove(e.clientX - r.left);
+      const r = rect(); onMove(e.clientX - r.left, e.clientY - r.top);
     });
     canvas.addEventListener('click', () => onStart());
 
     canvas.addEventListener('touchmove', e => {
       e.preventDefault();
       const r = rect();
-      onMove(e.touches[0].clientX - r.left);
+      onMove(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
     }, {passive:false});
 
     canvas.addEventListener('touchstart', e => {
       e.preventDefault();
       const r = rect();
-      onMove(e.touches[0].clientX - r.left);
+      onMove(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
       if (state === 'PLAYING') Player.fireTorpedo();
       else onStart();
     }, {passive:false});
@@ -156,9 +156,9 @@ const Game = (() => {
 
     // Controls legend
     ctx.fillStyle=U.rgba(CFG.C.DIM,.85); ctx.font='12px "Courier New"';
-    ctx.fillText('MOUSE / ← → KEYS  :  Helm control', cx, 500);
-    ctx.fillText('SPACE / TAP        :  Launch photon torpedo  (auto-phasers always active)', cx, 521);
-    ctx.fillText('ESC                :  Tactical pause', cx, 542);
+    ctx.fillText('MOUSE / ← → ↑ ↓ KEYS  :  Full helm control (lateral + vertical)', cx, 500);
+    ctx.fillText('SPACE / TAP             :  Launch photon torpedo  (auto-phasers always active)', cx, 521);
+    ctx.fillText('ESC                     :  Tactical pause', cx, 542);
     ctx.textAlign='left';
   }
 

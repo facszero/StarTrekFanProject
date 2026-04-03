@@ -5,22 +5,27 @@
 // ═══════════════════════════════════════════════════════════════════
 const Player = (() => {
   let x, targetX, bankAngle;
+  let y, targetY, pitchAngle;
   let shields, torpedoes, lives;
   let invTimer, shootTimer;
   let hitFlash;
 
   return {
     get x()         { return x; },
+    get y()         { return y; },
     get shields()   { return shields; },
     get torpedoes() { return torpedoes; },
     get lives()     { return lives; },
     get bank()      { return bankAngle; },
+    get pitch()     { return pitchAngle; },
 
     init() { this.reset(); },
 
     reset() {
       x = targetX  = CFG.PLAYER_X0;
+      y = targetY  = CFG.PLAYER_Y0;
       bankAngle    = 0;
+      pitchAngle   = 0;
       shields      = CFG.SHIELD_MAX;
       torpedoes    = CFG.TORPEDO_MAX;
       lives        = CFG.LIVES;
@@ -29,14 +34,16 @@ const Player = (() => {
       hitFlash     = 0;
     },
 
-    setTargetX(nx) {
-      targetX = U.clamp(nx, 110, CFG.W - 110);
+    // Called from game.js with raw canvas coords
+    setTarget(nx, ny) {
+      targetX = U.clamp(nx, 110,            CFG.W - 110);
+      targetY = U.clamp(ny, CFG.PLAYER_Y_MIN, CFG.PLAYER_Y_MAX);
     },
 
     fireTorpedo() {
       if (torpedoes > 0) {
         torpedoes--;
-        Projectiles.fireTorpedoFrom(x, CFG.PLAYER_Y);
+        Projectiles.fireTorpedoFrom(x, y);
       }
     },
 
@@ -59,59 +66,64 @@ const Player = (() => {
     },
 
     update(dt, keys) {
-      // Keyboard input
+      // ── Keyboard: lateral ──────────────────────────────────────
       if (keys['ArrowLeft'] || keys['KeyA'])
-        targetX = U.clamp(targetX - CFG.PLAYER_SPEED * dt, 110, CFG.W - 110);
+        targetX = U.clamp(targetX - CFG.PLAYER_SPEED   * dt, 110, CFG.W - 110);
       if (keys['ArrowRight']|| keys['KeyD'])
-        targetX = U.clamp(targetX + CFG.PLAYER_SPEED * dt, 110, CFG.W - 110);
+        targetX = U.clamp(targetX + CFG.PLAYER_SPEED   * dt, 110, CFG.W - 110);
 
-      // Smooth follow
+      // ── Keyboard: vertical ─────────────────────────────────────
+      if (keys['ArrowUp']   || keys['KeyW'])
+        targetY = U.clamp(targetY - CFG.PLAYER_SPEED_Y * dt, CFG.PLAYER_Y_MIN, CFG.PLAYER_Y_MAX);
+      if (keys['ArrowDown'] || keys['KeyS'])
+        targetY = U.clamp(targetY + CFG.PLAYER_SPEED_Y * dt, CFG.PLAYER_Y_MIN, CFG.PLAYER_Y_MAX);
+
+      // ── Smooth follow ──────────────────────────────────────────
       x = U.lerp(x, targetX, dt * 11);
+      y = U.lerp(y, targetY, dt * 9);
 
-      // Banking
-      const want = ((x - CFG.W/2) / (CFG.W/2 - 110)) * CFG.PLAYER_MAX_BANK;
-      bankAngle = U.lerp(bankAngle, want, dt * CFG.PLAYER_BANK_RATE);
+      // ── Banking (lateral tilt) ─────────────────────────────────
+      const wantBank  = ((x - CFG.W/2) / (CFG.W/2 - 110)) * CFG.PLAYER_MAX_BANK;
+      bankAngle = U.lerp(bankAngle, wantBank, dt * CFG.PLAYER_BANK_RATE);
 
-      // Timers
+      // ── Pitch (forward/backward tilt from vertical movement) ───
+      // Moving up → nose dips forward; moving down → nose lifts
+      const vy = targetY - y;   // positive = moving down
+      const wantPitch = U.clamp(-vy / 40, -CFG.PLAYER_MAX_PITCH, CFG.PLAYER_MAX_PITCH);
+      pitchAngle = U.lerp(pitchAngle, wantPitch, dt * CFG.PLAYER_PITCH_RATE);
+
+      // ── Timers ─────────────────────────────────────────────────
       if (invTimer > 0)  invTimer  -= dt;
       if (hitFlash > 0)  hitFlash  -= dt;
 
-      // Auto phaser
+      // ── Auto phasers ───────────────────────────────────────────
       shootTimer -= dt * 1000;
       if (shootTimer <= 0) {
         shootTimer = CFG.PHASER_INTERVAL;
-        Projectiles.firePhaserFrom(x, CFG.PLAYER_Y);
+        Projectiles.firePhaserFrom(x, y);
       }
     },
 
     render(ctx) {
-      // Invulnerability flash
       if (invTimer > 0 && Math.floor(invTimer * 9) % 2 === 0) return;
 
-      // Red tint on damage
-      if (hitFlash > 0) {
-        ctx.save();
-        ctx.globalCompositeOperation = 'source-over';
-        // draw ship normally first, then overlay
-      }
+      Draw.enterprise(ctx, x, y, 1.0, bankAngle, pitchAngle);
 
-      Draw.enterprise(ctx, x, CFG.PLAYER_Y, 1.0, bankAngle);
-
-      // Engine thruster glow (always present)
+      // Warp engine glow
       ctx.save();
-      const tr = ctx.createRadialGradient(x, CFG.PLAYER_Y + 8, 0, x, CFG.PLAYER_Y + 8, 28);
+      const tr = ctx.createRadialGradient(x, y + 8, 0, x, y + 8, 28);
       tr.addColorStop(0, 'rgba(80,140,255,.55)');
       tr.addColorStop(1, 'transparent');
       ctx.fillStyle = tr;
-      ctx.beginPath(); ctx.arc(x, CFG.PLAYER_Y + 8, 28, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, y + 8, 28, 0, Math.PI*2); ctx.fill();
       ctx.restore();
 
       if (hitFlash > 0) {
         ctx.save();
-        ctx.globalCompositeOperation = 'source-atop';
         ctx.globalAlpha = hitFlash * 4;
         ctx.fillStyle = '#ff3300';
-        ctx.fillRect(x - 120, CFG.PLAYER_Y - 120, 240, 160);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillRect(x - 120, y - 120, 240, 160);
         ctx.restore();
       }
     }
@@ -131,13 +143,12 @@ class Enemy {
     this.driftX = driftX;
     this.driftY = driftY;
 
-    // Screen-space interpolation endpoints
-    // spawnX/Y ≈ vanishing point (tiny)
-    // targetX/Y ≈ midscreen (scaled up)
     this.spawnX  = CFG.W/2 + wx * 0.038;
     this.spawnY  = CFG.HORIZON_Y + 6;
+
+    // targetX/Y are recalculated each frame to track the player
     this.targetX = CFG.W/2 + wx * 0.60;
-    this.targetY = CFG.PLAYER_Y - 110;
+    this.targetY = CFG.PLAYER_Y0 - 110;
 
     this.sx    = this.spawnX;
     this.sy    = this.spawnY;
@@ -147,12 +158,12 @@ class Enemy {
     this.maxHp  = this.hp;
     this.points = type === 'borg' ? 500 : 100;
 
-    this.dead           = false;
-    this.readyToRemove  = false;
-    this.exploding      = false;
-    this.exTimer        = 0;
-    this.exMax          = type === 'borg' ? 1.2 : .75;
-    this.tick           = 0;
+    this.dead          = false;
+    this.readyToRemove = false;
+    this.exploding     = false;
+    this.exTimer       = 0;
+    this.exMax         = type === 'borg' ? 1.2 : .75;
+    this.tick          = 0;
   }
 
   get hitRadius() { return 44 * this.scale; }
@@ -182,20 +193,21 @@ class Enemy {
     this.worldX += this.driftX * dt * 60;
     this.worldY += this.driftY * dt * 60;
 
-    // Recalculate screen targets (drift may change them)
+    // Recompute screen targets — track player Y dynamically
     this.targetX = CFG.W/2 + this.worldX * 0.60;
+    this.targetY = Player.y - 110;   // ← follows player vertical position
 
     const t = U.easeIn(U.clamp(1 - this.z / CFG.Z_SPAWN, 0, 1));
     this.sx    = U.lerp(this.spawnX, this.targetX, t);
     this.sy    = U.lerp(this.spawnY, this.targetY, t);
     this.scale = U.lerp(0.022, 0.92, t);
 
-    // Passed player
+    // Passed player — collision check
     if (this.z <= CFG.Z_KILL) {
       const lateralDist = Math.abs(this.sx - Player.x);
-      if (lateralDist < 95) {
-        const dead = Player.takeHit(type === 'borg' ? 35 : 22);
-        if (dead) { /* game over handled in Game */ }
+      const verticalDist = Math.abs(this.sy - Player.y);
+      if (lateralDist < 95 && verticalDist < 80) {
+        Player.takeHit(this.type === 'borg' ? 35 : 22);
       }
       this.dead          = true;
       this.readyToRemove = true;
@@ -214,7 +226,7 @@ class Enemy {
     if      (this.type === 'bop')  Draw.birdOfPrey(ctx, this.sx, this.sy, this.scale * .72);
     else if (this.type === 'borg') Draw.borgCube  (ctx, this.sx, this.sy, this.scale,  this.tick);
 
-    // HP bar (visible when damaged and close enough)
+    // HP bar
     if (this.hp < this.maxHp && this.scale > .12) {
       const bw = 55 * this.scale, bh = 5 * this.scale;
       const bx = this.sx - bw/2,  by = this.sy - 52 * this.scale;
@@ -241,43 +253,37 @@ class Enemy {
 const Enemies = (() => {
   let _list = [], queue = [], waveActive = false;
 
-  // Formation definitions per wave
   function buildWave(n) {
     const sp = CFG.BOP_SPEED_BASE + (n-1)*75;
     const waves = [
-      // Wave 1 — classic column, easy
       [
-        {type:'bop', wx:   0, wy:-80, speed:sp},
-        {type:'bop', wx:-200, wy:-65, speed:sp, delay:1100},
-        {type:'bop', wx: 200, wy:-65, speed:sp, delay:1100},
+        {type:'bop', wx:   0, speed:sp},
+        {type:'bop', wx:-200, speed:sp, delay:1100},
+        {type:'bop', wx: 200, speed:sp, delay:1100},
       ],
-      // Wave 2 — V formation
       [
-        {type:'bop', wx:   0, wy:-100, speed:sp*1.1},
-        {type:'bop', wx:-180, wy: -80, speed:sp*1.1, delay:700},
-        {type:'bop', wx: 180, wy: -80, speed:sp*1.1, delay:700},
-        {type:'bop', wx:-340, wy: -60, speed:sp*1.1, delay:1400},
-        {type:'bop', wx: 340, wy: -60, speed:sp*1.1, delay:1400},
+        {type:'bop', wx:   0, speed:sp*1.1},
+        {type:'bop', wx:-180, speed:sp*1.1, delay:700},
+        {type:'bop', wx: 180, speed:sp*1.1, delay:700},
+        {type:'bop', wx:-340, speed:sp*1.1, delay:1400},
+        {type:'bop', wx: 340, speed:sp*1.1, delay:1400},
       ],
-      // Wave 3 — flanking pincer
       [
-        {type:'bop', wx:-420, wy:-50, speed:sp*1.2, driftX: 2.5},
-        {type:'bop', wx: 420, wy:-50, speed:sp*1.2, driftX:-2.5},
-        {type:'bop', wx:   0, wy:-95, speed:sp*1.2, delay:1600},
-        {type:'bop', wx:-200, wy:-80, speed:sp*1.2, delay:2600},
-        {type:'bop', wx: 200, wy:-80, speed:sp*1.2, delay:2600},
-        {type:'bop', wx:   0, wy:-95, speed:sp*1.4, delay:3800},
+        {type:'bop', wx:-420, speed:sp*1.2, driftX: 2.5},
+        {type:'bop', wx: 420, speed:sp*1.2, driftX:-2.5},
+        {type:'bop', wx:   0, speed:sp*1.2, delay:1600},
+        {type:'bop', wx:-200, speed:sp*1.2, delay:2600},
+        {type:'bop', wx: 200, speed:sp*1.2, delay:2600},
+        {type:'bop', wx:   0, speed:sp*1.4, delay:3800},
       ],
-      // Wave 4 — first Borg encounter
       [
-        {type:'bop',  wx:-250, wy:-70, speed:sp*1.1},
-        {type:'bop',  wx: 250, wy:-70, speed:sp*1.1, delay:500},
-        {type:'borg', wx:   0, wy:-90, speed:CFG.BORG_SPEED_BASE + n*40, delay:3000},
-        {type:'bop',  wx:-180, wy:-65, speed:sp*1.2, delay:4200},
-        {type:'bop',  wx: 180, wy:-65, speed:sp*1.2, delay:4200},
+        {type:'bop',  wx:-250, speed:sp*1.1},
+        {type:'bop',  wx: 250, speed:sp*1.1, delay:500},
+        {type:'borg', wx:   0, speed:CFG.BORG_SPEED_BASE + n*40, delay:3000},
+        {type:'bop',  wx:-180, speed:sp*1.2, delay:4200},
+        {type:'bop',  wx: 180, speed:sp*1.2, delay:4200},
       ],
     ];
-
     const template = waves[Math.min(n-1, waves.length-1)];
     return template.map(e => ({...e, delay: e.delay || 0}));
   }
@@ -302,19 +308,16 @@ const Enemies = (() => {
     },
 
     update(dt) {
-      // Drain spawn queue
       queue = queue.filter(item => {
         item.delay -= dt * 1000;
         if (item.delay <= 0) { _list.push(new Enemy(item)); return false; }
         return true;
       });
-
       for (const e of _list) e.update(dt);
       _list = _list.filter(e => !e.readyToRemove);
     },
 
     render(ctx) {
-      // Far enemies behind close ones
       const sorted = [..._list].sort((a,b) => b.z - a.z);
       for (const e of sorted) e.render(ctx);
     }
