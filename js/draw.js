@@ -121,47 +121,39 @@ const Draw = {
 
   // ══════════════════════════════════════════════════════════════
   //  BORG CUBE
-  //  Uses real sprites from borg_sheet.
-  //  Angle selection based on scale (far=frente, near=angled):
-  //    scale < 0.12  → cube_frente (head-on, enemy at distance)
-  //    scale 0.12-0.35 → cube_45a (slight angle, mid-range)
-  //    scale 0.35-0.6  → cube_65  (steeper angle)
-  //    scale > 0.6     → cube_85a (almost overhead as it passes)
+  //  Sprite multiplier: 3.94 → cube appears ~310px wide at max scale
+  //  Angle selection by scale (0.022 far → 0.78 closest)
   // ══════════════════════════════════════════════════════════════
   borgCube(ctx, cx, cy, scale, tick) {
-    // Choose angle frame based on approach distance (scale)
     let spriteName;
     if      (scale < 0.12) spriteName = 'cube_frente';
     else if (scale < 0.35) spriteName = 'cube_45a';
-    else if (scale < 0.60) spriteName = 'cube_65';
+    else if (scale < 0.58) spriteName = 'cube_65';
     else                   spriteName = 'cube_85a';
 
-    if (Sprites.drawBorg(ctx, spriteName, cx, cy, scale * 100)) {
-      this._borgGlow(ctx, cx, cy, scale, tick, 100);
+    if (Sprites.drawBorg(ctx, spriteName, cx, cy, scale * 3.94)) {
+      this._borgGlow(ctx, cx, cy, scale, tick, 199); // hw = (101/2)*3.94
       return;
     }
-    // Canvas fallback
-    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
-    const s=62,g='#00cc44',dk='#060d08';
-    ctx.beginPath(); ctx.moveTo(s,-s); ctx.lineTo(s,s); ctx.lineTo(s+18,s-18); ctx.lineTo(s+18,-s-18); ctx.closePath();
-    ctx.fillStyle='#080f08'; ctx.fill(); ctx.strokeStyle=g; ctx.lineWidth=1; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-s,-s); ctx.lineTo(s,-s); ctx.lineTo(s+18,-s-18); ctx.lineTo(-s+18,-s-18); ctx.closePath();
+    // Canvas fallback — scaled to match sprite size (~310px at max scale)
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale * 3.94, scale * 3.94);
+    const s=40, g='#00cc44', dk='#060d08';
+    ctx.beginPath(); ctx.moveTo(s,-s); ctx.lineTo(s,s); ctx.lineTo(s+12,s-12); ctx.lineTo(s+12,-s-12); ctx.closePath();
+    ctx.fillStyle='#080f08'; ctx.fill(); ctx.strokeStyle=g; ctx.lineWidth=.5; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-s,-s); ctx.lineTo(s,-s); ctx.lineTo(s+12,-s-12); ctx.lineTo(-s+12,-s-12); ctx.closePath();
     ctx.fillStyle='#0a140a'; ctx.fill(); ctx.stroke();
     ctx.fillStyle=dk; ctx.fillRect(-s,-s,s*2,s*2);
-    ctx.save(); ctx.strokeStyle=g; ctx.globalAlpha=.25; ctx.lineWidth=.6;
-    for(let i=-s;i<=s;i+=16){ctx.beginPath();ctx.moveTo(i,-s);ctx.lineTo(i,s);ctx.stroke();ctx.beginPath();ctx.moveTo(-s,i);ctx.lineTo(s,i);ctx.stroke();}
+    ctx.save(); ctx.strokeStyle=g; ctx.globalAlpha=.25; ctx.lineWidth=.4;
+    for(let i=-s;i<=s;i+=10){ctx.beginPath();ctx.moveTo(i,-s);ctx.lineTo(i,s);ctx.stroke();ctx.beginPath();ctx.moveTo(-s,i);ctx.lineTo(s,i);ctx.stroke();}
     ctx.restore();
-    ctx.save(); ctx.globalAlpha=.65; ctx.fillStyle='#00ee44';
-    for(let i=0;i<10;i++){ctx.fillRect(U.rnd(-s+4,s-14),U.rnd(-s+4,s-14),U.rnd(4,12),U.rnd(4,12));}
+    ctx.strokeStyle=g; ctx.lineWidth=1; ctx.shadowColor=g; ctx.shadowBlur=10; ctx.strokeRect(-s,-s,s*2,s*2); ctx.shadowBlur=0;
     ctx.restore();
-    ctx.strokeStyle=g; ctx.lineWidth=2; ctx.shadowColor=g; ctx.shadowBlur=20; ctx.strokeRect(-s,-s,s*2,s*2); ctx.shadowBlur=0;
-    ctx.restore();
-    this._borgGlow(ctx, cx, cy, scale, tick, 62);
+    this._borgGlow(ctx, cx, cy, scale, tick, 199);
   },
 
   // ══════════════════════════════════════════════════════════════
   //  BORG SPHERE
-  //  sphere_frente at distance, sphere_45 mid-range, sphere_135a close
+  //  Sprite multiplier: 3.21 → sphere ~255px wide at max scale
   // ══════════════════════════════════════════════════════════════
   borgSphere(ctx, cx, cy, scale, tick) {
     let spriteName;
@@ -169,95 +161,98 @@ const Draw = {
     else if (scale < 0.50) spriteName = 'sphere_45';
     else                   spriteName = 'sphere_135a';
 
-    if (Sprites.drawBorg(ctx, spriteName, cx, cy, scale * 100)) {
-      this._borgGlow(ctx, cx, cy, scale, tick, 50);
+    if (Sprites.drawBorg(ctx, spriteName, cx, cy, scale * 3.21)) {
+      this._borgGlow(ctx, cx, cy, scale, tick, 164); // hw = (102/2)*3.21
       return;
     }
-    // Canvas fallback — simple sphere
+    // Canvas fallback
     ctx.save();
-    const g = ctx.createRadialGradient(cx-8*scale,cy-8*scale,2*scale, cx,cy,52*scale);
-    g.addColorStop(0,'#1a3a1a'); g.addColorStop(.5,'#0a200a'); g.addColorStop(1,'#030803');
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,52*scale,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='#00cc44'; ctx.lineWidth=1.5*scale;
-    ctx.shadowColor='#00ff44'; ctx.shadowBlur=14*scale;
+    const r = 52 * scale * 3.21;
+    const gr = ctx.createRadialGradient(cx-r*.15,cy-r*.15,r*.04, cx,cy,r);
+    gr.addColorStop(0,'#1a3a1a'); gr.addColorStop(.5,'#0a200a'); gr.addColorStop(1,'#030803');
+    ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#00cc44'; ctx.lineWidth=Math.max(1,1.5*scale*3.21);
+    ctx.shadowColor='#00ff44'; ctx.shadowBlur=r*.25;
     ctx.stroke(); ctx.shadowBlur=0; ctx.restore();
-    this._borgGlow(ctx, cx, cy, scale, tick, 52);
+    this._borgGlow(ctx, cx, cy, scale, tick, 164);
   },
 
   // ══════════════════════════════════════════════════════════════
-  //  BORG SCOUT  — fast attack ship
+  //  BORG SCOUT
+  //  Sprite multiplier: 1.67 → scout ~155px wide at max scale
   // ══════════════════════════════════════════════════════════════
   borgScout(ctx, cx, cy, scale, tick) {
     let spriteName;
     if      (scale < 0.15) spriteName = 'scout_frente';
     else if (scale < 0.40) spriteName = 'scout_25a';
-    else if (scale < 0.65) spriteName = 'scout_arriba';
+    else if (scale < 0.62) spriteName = 'scout_arriba';
     else                   spriteName = 'scout_fl_high';
 
-    if (Sprites.drawBorg(ctx, spriteName, cx, cy, scale * 120)) {
+    if (Sprites.drawBorg(ctx, spriteName, cx, cy, scale * 1.67)) {
       this._borgScoutGlow(ctx, cx, cy, scale);
       return;
     }
-    // Canvas fallback — simple wedge
-    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    // Canvas fallback
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale * 1.67, scale * 1.67);
     ctx.fillStyle='#1a2a1a';
-    ctx.beginPath(); ctx.moveTo(0,-40); ctx.lineTo(-35,20); ctx.lineTo(0,12); ctx.lineTo(35,20); ctx.closePath();
-    ctx.fill(); ctx.strokeStyle='#336633'; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle='#00aa33'; ctx.beginPath(); ctx.arc(0,-40,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0,-35); ctx.lineTo(-30,18); ctx.lineTo(0,10); ctx.lineTo(30,18); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#336633'; ctx.lineWidth=.8; ctx.stroke();
+    ctx.fillStyle='#00aa33'; ctx.beginPath(); ctx.arc(0,-35,3.5,0,Math.PI*2); ctx.fill();
     ctx.restore();
   },
 
   // ══════════════════════════════════════════════════════════════
-  //  BORG ASSIMILATION SHIP  — large boss-tier enemy
-  //  Uses the tall "arriba" view for imposing presence
+  //  BORG ASSIMILATION SHIP
+  //  Sprite multiplier: 2.06 → ship ~175px wide / ~440px tall at max scale
   // ══════════════════════════════════════════════════════════════
   borgAssimil(ctx, cx, cy, scale, tick, firing) {
     const spriteName = firing ? 'assimil_beam' : 'assimil_arriba';
 
-    if (Sprites.drawBorg(ctx, spriteName, cx, cy, scale * 100)) {
-      // Green assimilation beam overlay when firing
+    if (Sprites.drawBorg(ctx, spriteName, cx, cy, scale * 2.06)) {
       if (firing && scale > 0.3) {
+        const beamLen = 107 * scale * 2.06;
         ctx.save(); ctx.globalAlpha = .7;
         ctx.shadowColor='#00ff66'; ctx.shadowBlur=22;
-        ctx.strokeStyle='#00ff44'; ctx.lineWidth=3*scale;
-        ctx.beginPath(); ctx.moveTo(cx,cy+30*scale); ctx.lineTo(cx,cy+120*scale); ctx.stroke();
+        ctx.strokeStyle='#00ff44'; ctx.lineWidth=Math.max(1.5, 3*scale);
+        ctx.beginPath(); ctx.moveTo(cx, cy + beamLen*.3); ctx.lineTo(cx, cy + beamLen); ctx.stroke();
         ctx.shadowBlur=0; ctx.restore();
       }
-      this._borgGlow(ctx, cx, cy, scale, tick, 55);
+      this._borgGlow(ctx, cx, cy, scale, tick, 112); // hw = (109/2)*2.06
       return;
     }
     // Canvas fallback
-    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
-    ctx.fillStyle='#0d1a0d';
-    ctx.fillRect(-30,-50,60,100);
-    ctx.strokeStyle='#00cc44'; ctx.lineWidth=1.5; ctx.strokeRect(-30,-50,60,100);
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale * 2.06, scale * 2.06);
+    ctx.fillStyle='#0d1a0d'; ctx.fillRect(-25,-45,50,90);
+    ctx.strokeStyle='#00cc44'; ctx.lineWidth=1.2; ctx.strokeRect(-25,-45,50,90);
     ctx.restore();
   },
 
   // ── Shared Borg glow overlay ───────────────────────────────────
-  _borgGlow(ctx, cx, cy, scale, tick, halfSize) {
-    const hw = halfSize * scale;
+  // hwMult: (sprite_native_px / 2) * draw_scale_multiplier
+  //         → hw = scale * hwMult = visual half-size on screen
+  _borgGlow(ctx, cx, cy, scale, tick, hwMult) {
+    const hw = scale * hwMult;
     ctx.save();
-    // Ambient green glow
-    const g = ctx.createRadialGradient(cx,cy,hw*.3, cx,cy,hw*1.8);
-    g.addColorStop(0, 'rgba(0,200,60,.08)');
-    g.addColorStop(1, 'transparent');
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,hw*1.8,0,Math.PI*2); ctx.fill();
-    // Tractor beam (when close)
-    if (scale > .35) {
-      ctx.globalAlpha = U.clamp((scale-.35)*1.8, 0, .8);
-      ctx.strokeStyle='#00ff66'; ctx.lineWidth = 1.5;
+    const gr = ctx.createRadialGradient(cx,cy,hw*.3, cx,cy,hw*1.6);
+    gr.addColorStop(0, 'rgba(0,200,60,.07)');
+    gr.addColorStop(1, 'transparent');
+    ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(cx,cy,hw*1.6,0,Math.PI*2); ctx.fill();
+    // Tractor beam when close enough
+    if (scale > .40) {
+      ctx.globalAlpha = U.clamp((scale-.40)*2.0, 0, .7);
+      ctx.strokeStyle='#00ff66'; ctx.lineWidth = Math.max(1, 1.5 * scale);
       ctx.setLineDash([8,5]); ctx.lineDashOffset = -(tick*28);
-      ctx.beginPath(); ctx.moveTo(cx,cy+hw); ctx.lineTo(cx,cy+hw+70*scale); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx,cy+hw); ctx.lineTo(cx,cy+hw+55*scale*2); ctx.stroke();
       ctx.setLineDash([]);
     }
     ctx.restore();
   },
 
   _borgScoutGlow(ctx, cx, cy, scale) {
-    const g = ctx.createRadialGradient(cx,cy,0, cx,cy,40*scale);
-    g.addColorStop(0,'rgba(0,180,50,.14)'); g.addColorStop(1,'transparent');
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,40*scale,0,Math.PI*2); ctx.fill();
+    const r = 66 * scale;  // matches 40px * 1.67x mult
+    const gr = ctx.createRadialGradient(cx,cy,0, cx,cy,r);
+    gr.addColorStop(0,'rgba(0,180,50,.12)'); gr.addColorStop(1,'transparent');
+    ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
   },
 
 

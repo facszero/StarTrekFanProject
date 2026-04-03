@@ -212,7 +212,7 @@ class Enemy {
     const t = U.easeIn(U.clamp(1 - this.z / CFG.Z_SPAWN, 0, 1));
     this.sx    = U.lerp(this.spawnX, this.targetX, t);
     this.sy    = U.lerp(this.spawnY, this.targetY, t);
-    this.scale = U.lerp(0.022, 0.92, t);
+    this.scale = U.lerp(0.022, 0.78, t);   // max 0.78 → Borg cube ~310px, BOP ~110px
 
     // Passed player — collision check
     if (this.z <= CFG.Z_KILL) {
