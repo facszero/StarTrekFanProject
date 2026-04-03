@@ -219,6 +219,9 @@ const Game = (() => {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
+      // Load sprite sheets (async – canvas fallback used until ready)
+      Sprites.load('assets/sprites/');
+
       setupInput();
       updateScale();
       window.addEventListener('resize', updateScale);
