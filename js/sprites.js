@@ -496,3 +496,55 @@ Sprites.drawDs9 = function(ctx, name, cx, cy, scale) {
     mk('ds9',        'ds9_sheet.png');
   };
 })();
+
+// ════════════════════════════════════════════════════════════════════
+//  BORG UNICOMPLEX — Final Level Asset
+//  Source: Voyager "Dark Frontier" / "Endgame"
+//  Canon size: ≥600 km spanning, thousands of sub-structures
+//  Destroyed 2378 by neurolytic pathogen (Admiral Janeway)
+// ════════════════════════════════════════════════════════════════════
+
+Sprites.UNICOMPLEX = {
+  // unicomplex_sheet.png (1408x768)
+  // Top-down hub view (X-shaped, largest, central nexus)
+  hub_top     : [  40,  25, 733, 317],   // 108,924px — PRIMARY view, Borg Queen chamber
+
+  // 45° isometric angle (right side, detailed tech)
+  iso_right   : [ 846,  29, 521, 351],   // 116,036px — approach from right quadrant
+
+  // Side/lateral view (elongated horizontal structure)
+  side_long   : [  33, 376, 664, 129],   // 54,389px — side strut/corridor tunnel
+
+  // 3/4 angle medium (central intersection node)
+  node_med    : [ 727, 407, 307, 287],   // 82,494px — hub node mid-size
+
+  // Small variant (partial structure, distance element)
+  fragment_sm : [1056, 471, 325, 266],   // 35,188px — background element / debris
+
+  // Lower angle view (looking up at structure)
+  low_angle   : [  93, 547, 527, 192],   // 62,139px — dramatic fly-under angle
+};
+
+Sprites.drawUnicomplex = function(ctx, name, cx, cy, scale, rot) {
+  const img = Sprites.sheets.unicomplex;
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const r = Sprites.UNICOMPLEX[name]; if (!r) return false;
+  const dw = r[2]*scale, dh = r[3]*scale;
+  ctx.save(); ctx.translate(cx, cy);
+  if (rot) ctx.rotate(rot);
+  ctx.drawImage(img, r[0],r[1],r[2],r[3], -dw/2,-dh/2, dw,dh);
+  ctx.restore(); return true;
+};
+
+// Extend loader for unicomplex sheet
+(function() {
+  const _prev = Sprites.load.bind(Sprites);
+  Sprites.load = function(base) {
+    _prev(base);
+    const img = new Image();
+    img.onload = () => {};
+    img.onerror = () => console.warn('Failed: unicomplex_sheet.png');
+    img.src = base + 'unicomplex_sheet.png';
+    Sprites.sheets.unicomplex = img;
+  };
+})();
