@@ -5,19 +5,21 @@ const CFG = {
   W: 1280,
   H: 720,
 
-  // ── Perspective ─────────────────────────────────────────────────────────
-  // Enemies spawn at Z_SPAWN and move toward 0.
-  // Screen mapping is interpolated: at Z_SPAWN → near vanishing pt; at 0 → near player.
+  // ── Perspective — adjusted to HUD frame viewport ─────────────────────
+  // Frame game area: x=265-1066, y=127-534 (at scale 0.858)
   Z_SPAWN:      2800,
-  Z_KILL:       60,     // enemy "passes" player; collision checked here
-  HORIZON_Y:    252,    // Y of vanishing point on canvas
-  PLAYER_Y:     582,    // Y where Enterprise-D is drawn
+  Z_KILL:       60,
+  HORIZON_Y:    152,   // top of frame viewport + margin
+  PLAYER_Y:     479,   // bottom of frame viewport - margin (legacy ref)
 
   // ── Player ──────────────────────────────────────────────────────────────
-  PLAYER_X0:        640,   // default x
-  PLAYER_Y0:        582,   // default y
-  PLAYER_Y_MIN:     312,   // horizon(252) + 60px perspective margin
-  PLAYER_Y_MAX:     610,   // bottom bar(640) − 30px margin
+  PLAYER_X0:        665,   // center of frame viewport
+  PLAYER_Y0:        479,
+  PLAYER_Y_MIN:     187,   // frame top + 60px
+  PLAYER_Y_MAX:     490,   // frame bottom - 44px
+  // X bounds clamped to frame viewport
+  PLAYER_X_MIN:     300,
+  PLAYER_X_MAX:     1050,
   PLAYER_SPEED:     520,   // px/s lateral
   PLAYER_SPEED_Y:   340,   // px/s vertical (slightly tighter than lateral)
   PLAYER_BANK_RATE:  4.5,
@@ -41,8 +43,8 @@ const CFG = {
   LIVES:            3,
 
   // ── Enemies ─────────────────────────────────────────────────────────────
-  BOP_SPEED_BASE:   780,   // z-units / second (Bird of Prey)
-  BORG_SPEED_BASE:  480,
+  BOP_SPEED_BASE:   900,   // z-units / second (faster than before)
+  BORG_SPEED_BASE:  540,
 
   // ── Palette ─────────────────────────────────────────────────────────────
   C: {

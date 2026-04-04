@@ -193,56 +193,59 @@ const Game = (() => {
   // ── Screens ─────────────────────────────────────────────────────
   function renderTitle() {
     const cx = CFG.W / 2;
-    ctx.fillStyle = 'rgba(0,0,12,.72)'; ctx.fillRect(0,0,CFG.W,CFG.H);
+    ctx.fillStyle = 'rgba(0,0,12,.82)'; ctx.fillRect(0,0,CFG.W,CFG.H);
 
-    // Enterprise-D slowly banking
-    Draw.enterprise(ctx, cx, 400, 1.15, Math.sin(titleTick*.5)*.12, 0);
-    const tg=ctx.createRadialGradient(cx,408,0,cx,408,60);
-    tg.addColorStop(0,'rgba(80,140,255,.45)'); tg.addColorStop(1,'transparent');
-    ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(cx,408,60,0,Math.PI*2); ctx.fill();
-
-    // Game logo — use sprite if loaded, fallback to canvas text
+    // Game logo at top
     const logo = Sprites.sheets && Sprites.sheets.logo;
     if (logo && logo.complete && logo.naturalWidth) {
-      // Draw logo centered, scaled to fit nicely (target ~700px wide)
-      const LW = 700, LH = Math.round(700 * (688/1529));
-      const lx = cx - LW/2, ly = 52;
+      const LW=760, LH=Math.round(760*(688/1529));
       ctx.save();
-      ctx.shadowColor = 'rgba(150,120,50,.6)'; ctx.shadowBlur = 28;
-      ctx.drawImage(logo, lx, ly, LW, LH);
-      ctx.shadowBlur = 0; ctx.restore();
+      ctx.shadowColor='rgba(180,140,40,.7)'; ctx.shadowBlur=32;
+      ctx.drawImage(logo, cx-LW/2, 30, LW, LH);
+      ctx.shadowBlur=0; ctx.restore();
     } else {
-      // Fallback canvas text
-      ctx.save(); ctx.shadowColor=CFG.C.GOLD; ctx.shadowBlur=30;
-      ctx.fillStyle='#aaccff'; ctx.font='bold 14px Arial,sans-serif';
-      ctx.textAlign='center'; ctx.fillText('STAR TREK', cx, 82);
-      ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 60px Arial,sans-serif';
-      ctx.fillText('FINAL FRONTIER', cx, 162);
+      ctx.save(); ctx.shadowColor=CFG.C.GOLD; ctx.shadowBlur=28;
+      ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 58px Arial,sans-serif';
+      ctx.textAlign='center'; ctx.fillText('FINAL FRONTIER', cx, 120);
       ctx.shadowBlur=0; ctx.restore();
     }
 
+    // Enterprise-D below logo
+    const logoH = Math.round(760*(688/1529));
+    const entY = 30 + logoH + 20;
+    Draw.enterprise(ctx, cx, entY + 80, 1.1, Math.sin(titleTick*.5)*.12, 0);
+    const tg=ctx.createRadialGradient(cx,entY+88,0,cx,entY+88,60);
+    tg.addColorStop(0,'rgba(80,140,255,.4)'); tg.addColorStop(1,'transparent');
+    ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(cx,entY+88,60,0,Math.PI*2); ctx.fill();
+
     // Subtitle
-    ctx.fillStyle='#7a8a9a'; ctx.font='14px Arial,sans-serif'; ctx.textAlign='center';
-    ctx.fillText('USS Enterprise-D  ·  Tactical Engagement Simulator', cx, 330);
-    ctx.fillText('Fan Project — Not for Commercial Use', cx, 350);
+    const subY = entY + 175;
+    ctx.fillStyle='#7a8a9a'; ctx.font='13px Arial,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('USS Enterprise-D  ·  Tactical Engagement Simulator', cx, subY);
+    ctx.fillStyle=U.rgba(CFG.C.DIM,.6); ctx.font='11px Arial,sans-serif';
+    ctx.fillText('Fan Project — Not for Commercial Use', cx, subY+17);
 
-    // Decorative line
-    ctx.fillStyle=CFG.C.BORDER; ctx.fillRect(cx-280, 362, 560, 1);
+    ctx.fillStyle=CFG.C.BORDER; ctx.fillRect(cx-240, subY+28, 480, 1);
 
-    // Prompt blink
+    // Prompt
     if (Math.sin(Date.now()/480)>0) {
-      ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 15px Arial,sans-serif';
-      ctx.fillText('[ TAP OR PRESS ENTER TO ENGAGE ]', cx, 448);
+      ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 14px Arial,sans-serif';
+      ctx.textAlign='center'; ctx.fillText('[ TAP OR PRESS ENTER TO ENGAGE ]', cx, subY+50);
     }
 
-    // Controls — use Arial to avoid Courier New garbling on Android
-    ctx.fillStyle=U.rgba(CFG.C.DIM,.9); ctx.font='13px Arial,sans-serif';
-    const col1 = cx - 180, col2 = cx + 10;
+    // Controls 2-col
+    ctx.fillStyle=U.rgba(CFG.C.DIM,.85); ctx.font='12px Arial,sans-serif';
+    const col1=cx-200, col2=cx+10, cy2=subY+74;
     ctx.textAlign='left';
-    ctx.fillText('DRAG / Arrows',   col1, 490); ctx.fillText('Move ship',               col2, 490);
-    ctx.fillText('Tap on enemy',    col1, 512); ctx.fillText('Fire phaser (targeted)',   col2, 512);
-    ctx.fillText('Tap empty / Space', col1, 534); ctx.fillText('Photon torpedo (homing)', col2, 534);
-    ctx.fillText('Nova btn / N',    col1, 556); ctx.fillText('Area-clear discharge',     col2, 556);
+    [
+      ['DRAG / Arrows',       'Move ship'],
+      ['Tap on enemy',        'Fire phaser (targeted)'],
+      ['Tap empty / Space',   'Photon torpedo (homing)'],
+      ['Nova btn / N',        'Area-clear discharge'],
+    ].forEach(([k,v],i) => {
+      ctx.fillStyle=CFG.C.DIM;  ctx.fillText(k, col1, cy2+i*18);
+      ctx.fillStyle=CFG.C.TEXT; ctx.fillText(v, col2, cy2+i*18);
+    });
     ctx.textAlign='left';
   }
 
@@ -280,6 +283,14 @@ const Game = (() => {
     Nova.render(ctx);
     Player.render(ctx);
     Particles.render(ctx);
+
+    // ── HUD frame overlay (drawn OVER game, UNDER text HUD) ──────
+    const frameImg = Sprites.sheets && Sprites.sheets.hud_frame;
+    if (frameImg && frameImg.complete && frameImg.naturalWidth) {
+      const fw=1280, fh=604, fy=58;   // scaled: 1492×704 → 1280×604, centered
+      ctx.drawImage(frameImg, 0, fy, fw, fh);
+    }
+
     HUD.render(ctx, score, wave, dt);
     if (state==='PAUSED')    renderPause();
     if (state==='GAME_OVER') renderGameOver();

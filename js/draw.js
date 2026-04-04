@@ -257,12 +257,28 @@ const Draw = {
 
 
   phaserBeam(ctx, x1, y1, x2, y2, alpha) {
-    ctx.save(); ctx.globalAlpha=alpha;
-    const gr=ctx.createLinearGradient(x1,y1,x2,y2);
-    gr.addColorStop(0,'#ffcc66'); gr.addColorStop(.25,'#ff8830'); gr.addColorStop(.8,'#ff5500'); gr.addColorStop(1,'rgba(255,60,0,0)');
-    ctx.strokeStyle=U.rgba('#ff6600',.35); ctx.lineWidth=7; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-    ctx.strokeStyle=gr; ctx.lineWidth=2.5; ctx.shadowColor='#ff8830'; ctx.shadowBlur=14;
+    ctx.save(); ctx.globalAlpha = alpha;
+    const gr = ctx.createLinearGradient(x1,y1,x2,y2);
+    gr.addColorStop(0,   '#ffffff');
+    gr.addColorStop(.15, '#ffdd88');
+    gr.addColorStop(.5,  '#ff8830');
+    gr.addColorStop(1,   'rgba(255,80,0,0)');
+
+    // Wide outer glow
+    ctx.strokeStyle = U.rgba('#ff6600', .45); ctx.lineWidth = 12;
+    ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+
+    // Mid glow
+    ctx.strokeStyle = U.rgba('#ff8830', .65); ctx.lineWidth = 6;
+    ctx.shadowColor='#ff8830'; ctx.shadowBlur=18;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+
+    // Core beam (bright white/yellow)
+    ctx.strokeStyle = gr; ctx.lineWidth = 2.5;
+    ctx.shadowColor='#ffffff'; ctx.shadowBlur=10;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+
     ctx.shadowBlur=0; ctx.restore();
   },
 

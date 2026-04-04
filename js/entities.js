@@ -35,7 +35,7 @@ const Player = (() => {
     },
 
     setTarget(nx, ny) {
-      targetX = U.clamp(nx, 110,             CFG.W - 110);
+      targetX = U.clamp(nx, CFG.PLAYER_X_MIN, CFG.PLAYER_X_MAX);
       targetY = U.clamp(ny, CFG.PLAYER_Y_MIN, CFG.PLAYER_Y_MAX);
     },
 
@@ -75,9 +75,9 @@ const Player = (() => {
     update(dt, keys) {
       // ── Keyboard ───────────────────────────────────────────────
       if (keys['ArrowLeft'] || keys['KeyA'])
-        targetX = U.clamp(targetX - CFG.PLAYER_SPEED   * dt, 110, CFG.W - 110);
+        targetX = U.clamp(targetX - CFG.PLAYER_SPEED   * dt, CFG.PLAYER_X_MIN, CFG.PLAYER_X_MAX);
       if (keys['ArrowRight']|| keys['KeyD'])
-        targetX = U.clamp(targetX + CFG.PLAYER_SPEED   * dt, 110, CFG.W - 110);
+        targetX = U.clamp(targetX + CFG.PLAYER_SPEED   * dt, CFG.PLAYER_X_MIN, CFG.PLAYER_X_MAX);
       if (keys['ArrowUp']   || keys['KeyW'])
         targetY = U.clamp(targetY - CFG.PLAYER_SPEED_Y * dt, CFG.PLAYER_Y_MIN, CFG.PLAYER_Y_MAX);
       if (keys['ArrowDown'] || keys['KeyS'])
