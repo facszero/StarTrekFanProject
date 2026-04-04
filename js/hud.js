@@ -240,11 +240,15 @@ const HUD = (() => {
 
     // TACTICAL ANALYSIS
     sectionHdr(ctx,PX,cy,PW,'TACTICAL ANALYSIS',U.rgba(CFG.C.BORDER,.8));cy+=16;
+    // Current act
+    const actName = Story.currentAct ? Story.currentAct.name : '---';
     solidBg(ctx,BX,cy,BW,15,'#060c14');
-    txt(ctx,BX+4,cy+11,'THREAT LEVEL: ALPHA',U.rgba(CFG.C.ALERT,.7),8);cy+=17;
+    txt(ctx,BX+4,cy+11,actName,U.rgba(CFG.C.GOLD,.8),7); cy+=17;
     solidBg(ctx,BX,cy,BW,15,'#060e18');
-    txt(ctx,BX+4,cy+11,'SHIELDS: NOMINAL',U.rgba('#38ef7d',.7),8);cy+=17;
+    txt(ctx,BX+4,cy+11,'THREAT LEVEL: ALPHA',U.rgba(CFG.C.ALERT,.7),8);cy+=17;
     solidBg(ctx,BX,cy,BW,15,'#060c14');
+    txt(ctx,BX+4,cy+11,'SHIELDS: NOMINAL',U.rgba('#38ef7d',.7),8);cy+=17;
+    solidBg(ctx,BX,cy,BW,15,'#060e18');
     txt(ctx,BX+4,cy+11,'PHASERS: ARMED',U.rgba('#ff8832',.7),8);
   }
 

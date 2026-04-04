@@ -9,6 +9,35 @@ const Background = (() => {
   let   warpMult  = 1;
   let   targetMult= 1;
 
+  // Theme: controls nebula colors and space gradient
+  // blue=Klingon border, green=Romulan alliance, borg=Borg space, deep=final
+  let   theme     = 'blue';
+  let   targetTheme = 'blue';
+  let   themeBlend  = 1.0;  // 0=old theme, 1=new theme (lerped on change)
+
+  const THEMES = {
+    blue: {
+      bg1: '#0a1428', bg2: '#060d18', bg3: '#020508',
+      neb1: ['#1a2a5a','#0d2a40','#1a1040'],
+      neb2: ['#3355cc','#226688','#552299'],
+    },
+    green: {
+      bg1: '#081408', bg2: '#040e04', bg3: '#020502',
+      neb1: ['#0d2a0d','#142814','#0a1a0a'],
+      neb2: ['#225522','#335533','#1a4422'],
+    },
+    borg: {
+      bg1: '#040e08', bg2: '#020808', bg3: '#010403',
+      neb1: ['#051a05','#051205','#030e08'],
+      neb2: ['#0a3312','#0d2218','#062210'],
+    },
+    deep: {
+      bg1: '#080414', bg2: '#060210', bg3: '#030108',
+      neb1: ['#1a0a3a','#200830','#180a28'],
+      neb2: ['#442288','#331166','#220a55'],
+    },
+  };
+
   // ── Star ──────────────────────────────────────────────────────────────
   function mkStar(scattered) {
     const s = {
@@ -43,9 +72,22 @@ const Background = (() => {
 
     setWarp(active) { targetMult = active ? 9 : 1; },
 
+    setTheme(t) {
+      if (t !== targetTheme) {
+        targetTheme = t;
+        themeBlend  = 0;
+      }
+    },
+
     update(dt) {
       tick += dt;
       warpMult = U.lerp(warpMult, targetMult, dt * 2.5);
+
+      // Blend to new theme
+      if (themeBlend < 1) {
+        themeBlend = Math.min(1, themeBlend + dt * 0.8);
+        if (themeBlend >= 1) theme = targetTheme;
+      }
 
       for (const s of stars) {
         s.dist += s.speed * warpMult * dt;
@@ -56,11 +98,12 @@ const Background = (() => {
     render(ctx) {
       const cx = CFG.W / 2, cy = CFG.HORIZON_Y;
 
-      // ── deep space gradient ──
+      // ── deep space gradient (theme-aware) ──
+      const th = THEMES[theme] || THEMES.blue;
       const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 720);
-      bg.addColorStop(0, '#0a1428');
-      bg.addColorStop(.55,'#060d18');
-      bg.addColorStop(1,  '#020508');
+      bg.addColorStop(0, th.bg1);
+      bg.addColorStop(.55, th.bg2);
+      bg.addColorStop(1,  th.bg3);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, CFG.W, CFG.H);
 

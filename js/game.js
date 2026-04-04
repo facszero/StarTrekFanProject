@@ -153,6 +153,8 @@ const Game = (() => {
     Particles.reset();
     Nova.reset();
     BorgAdaptation.reset();
+    Story.init();
+    Story.onGameStart();
     HUD.init();
     Enemies.startWave(wave);
     HUD.alert('ENGAGE — WAVE 01', 2800);
@@ -161,6 +163,7 @@ const Game = (() => {
 
   function _nextWave() {
     wave++;
+    Story.onWaveStart(wave);
     Enemies.startWave(wave);
     setTimeout(() =>
       HUD.alert(`WAVE ${String(wave).padStart(2,'0')} — INCOMING`, 3000), 120);
@@ -177,7 +180,10 @@ const Game = (() => {
   function update() {
     Background.update(dt);
     titleTick += dt;
+    Story.update(dt);
+
     if (state !== 'PLAYING') return;
+    if (Story.shouldPauseGame()) return;   // freeze gameplay during act transition
     Player.update(dt, keys);
     Phasers.update(dt, Player.x, Player.y);
     BorgAdaptation.update(dt);
@@ -293,6 +299,7 @@ const Game = (() => {
     }
 
     HUD.render(ctx, score, wave, dt);
+    Story.render(ctx);   // cinematic overlay (acts as full-screen when active)
     if (state==='PAUSED')    renderPause();
     if (state==='GAME_OVER') renderGameOver();
   }
@@ -310,7 +317,7 @@ const Game = (() => {
       refreshRect();
       Background.init(); Player.init(); Enemies.init();
       Phasers.init(); Projectiles.init(); Particles.init(); Nova.init();
-      BorgAdaptation.init(); HUD.init();
+      BorgAdaptation.init(); Story.init(); HUD.init();
       requestAnimationFrame(ts => { lastTs=ts; requestAnimationFrame(loop); });
     }
   };
