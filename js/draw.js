@@ -258,7 +258,148 @@ const Draw = {
   },
 
   // ══════════════════════════════════════════════════════════════
-  //  ROMULAN SHIPS
+  //  CARDASSIAN SHIPS
+  // ══════════════════════════════════════════════════════════════
+  galor(ctx, cx, cy, scale) {
+    const name = scale < 0.22 ? 'galor_frente'
+               : scale < 0.52 ? 'galor_arriba'
+               :                'galor_rl';
+    if (Sprites.drawCardassian(ctx, name, cx, cy, scale * 1.38)) {
+      this._cardGlow(ctx, cx, cy, scale); return;
+    }
+    // Canvas fallback
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#3a1a00';
+    ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(-60,5); ctx.lineTo(-45,20); ctx.lineTo(0,8); ctx.lineTo(45,20); ctx.lineTo(60,5); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#cc6600'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#ff8800'; ctx.shadowColor='#ff6600'; ctx.shadowBlur=10;
+    ctx.beginPath(); ctx.arc(-45,20,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(45,20,5,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  },
+
+  keldon(ctx, cx, cy, scale) {
+    const name = scale < 0.22 ? 'keldon_fv'
+               : scale < 0.52 ? 'keldon_fl'
+               :                'keldon_top';
+    if (Sprites.drawCardassian(ctx, name, cx, cy, scale * 1.22)) {
+      this._cardGlow(ctx, cx, cy, scale); return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#3a2000';
+    ctx.beginPath(); ctx.moveTo(0,-18); ctx.lineTo(-80,6); ctx.lineTo(-60,28); ctx.lineTo(0,10); ctx.lineTo(60,28); ctx.lineTo(80,6); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#cc6600'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#ff8800'; ctx.shadowColor='#ff6600'; ctx.shadowBlur=12;
+    ctx.beginPath(); ctx.arc(-60,28,6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(60,28,6,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  },
+
+  _cardGlow(ctx, cx, cy, scale) {
+    const g=ctx.createRadialGradient(cx,cy+15*scale,0,cx,cy+15*scale,55*scale);
+    g.addColorStop(0,'rgba(200,80,0,.13)'); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy+15*scale,55*scale,0,Math.PI*2); ctx.fill();
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  //  DOMINION SHIPS
+  // ══════════════════════════════════════════════════════════════
+  jemHadar(ctx, cx, cy, scale) {
+    const name = scale < 0.20 ? 'jem_straight'
+               : scale < 0.48 ? 'jem_fl'
+               :                'jem_top';
+    if (Sprites.drawDominion(ctx, name, cx, cy, scale * 1.82)) {
+      this._domGlow(ctx, cx, cy, scale, 'fighter'); return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#1a1a2a';
+    ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(-42,5); ctx.lineTo(-28,18); ctx.lineTo(0,6); ctx.lineTo(28,18); ctx.lineTo(42,5); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#6644cc'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#8866ff'; ctx.shadowColor='#6644cc'; ctx.shadowBlur=10;
+    ctx.beginPath(); ctx.arc(-28,18,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(28,18,4,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  },
+
+  jemHadarBattle(ctx, cx, cy, scale) {
+    const name = scale < 0.22 ? 'jemb_fl'
+               : scale < 0.50 ? 'jemb_rl'
+               :                'jemb_top';
+    if (Sprites.drawDominion(ctx, name, cx, cy, scale * 1.35)) {
+      this._domGlow(ctx, cx, cy, scale, 'cruiser'); return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#151525';
+    ctx.beginPath(); ctx.moveTo(0,-18); ctx.lineTo(-65,8); ctx.lineTo(-48,24); ctx.lineTo(0,10); ctx.lineTo(48,24); ctx.lineTo(65,8); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#7755dd'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#9977ff'; ctx.shadowColor='#7755dd'; ctx.shadowBlur=14;
+    ctx.beginPath(); ctx.arc(-48,24,6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(48,24,6,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  },
+
+  _domGlow(ctx, cx, cy, scale, type) {
+    const r = type==='fighter' ? 40 : 55;
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r*scale);
+    g.addColorStop(0,'rgba(80,50,180,.14)'); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,r*scale,0,Math.PI*2); ctx.fill();
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  //  SPECIES 8472 BIOSHIP
+  // ══════════════════════════════════════════════════════════════
+  bioship(ctx, cx, cy, scale, large) {
+    const name = large
+      ? (scale < 0.30 ? 'bio_large_frente' : 'bio_lg_side')
+      : (scale < 0.25 ? 'bio_sm_a'         : 'bio_sm_top');
+    const mult = large ? 0.82 : 1.45;
+    if (Sprites.drawSp8472(ctx, name, cx, cy, scale * mult)) {
+      this._bioGlow(ctx, cx, cy, scale); return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#1a0a2a';
+    ctx.beginPath(); ctx.moveTo(0,-18); ctx.lineTo(-30,0); ctx.lineTo(-20,18); ctx.lineTo(0,8); ctx.lineTo(20,18); ctx.lineTo(30,0); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#44bb22'; ctx.lineWidth=1.5; ctx.stroke();
+    for(let i=0;i<4;i++){
+      const a=i/4*Math.PI*2;
+      ctx.fillStyle='#55ee33'; ctx.shadowColor='#44bb22'; ctx.shadowBlur=8;
+      ctx.beginPath(); ctx.arc(Math.cos(a)*15,Math.sin(a)*12,3.5,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+    }
+    ctx.restore();
+  },
+
+  _bioGlow(ctx, cx, cy, scale) {
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,60*scale);
+    g.addColorStop(0,'rgba(40,160,20,.15)'); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,60*scale,0,Math.PI*2); ctx.fill();
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  //  ASTEROID — upgraded to use real sprite sheet rotation frames
+  // ══════════════════════════════════════════════════════════════
+  asteroid(ctx, cx, cy, radius, rotation, verts) {
+    // Attempt real sprite: map rotation angle to one of 7 frames
+    const frame = Math.floor(((rotation % (Math.PI*2)) / (Math.PI*2)) * 7) % 7;
+    const sprScale = (radius * 2) / 81;  // rot8_med frames are ~81px wide
+    if (Sprites.drawAsteroid(ctx, frame, cx, cy, sprScale)) return;
+
+    // Canvas fallback
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(rotation);
+    ctx.beginPath();
+    verts.forEach(([x,y],i) => {
+      if(i===0) ctx.moveTo(x*radius,y*radius);
+      else      ctx.lineTo(x*radius,y*radius);
+    });
+    ctx.closePath();
+    const g=ctx.createRadialGradient(-radius*.25,-radius*.25,radius*.08,0,0,radius);
+    g.addColorStop(0,'#8a8870'); g.addColorStop(.5,'#555548'); g.addColorStop(1,'#2e2e22');
+    ctx.fillStyle=g; ctx.fill();
+    ctx.strokeStyle='#66664a'; ctx.lineWidth=Math.max(1,radius*.04); ctx.stroke();
+    ctx.restore();
+  },
+
+
   //  Angle progression: frente (nose-on distant) → angle (mid) → arriba (close)
   // ══════════════════════════════════════════════════════════════
 

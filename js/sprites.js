@@ -294,3 +294,205 @@ Sprites.drawKlingon = function(ctx, name, cx, cy, scale, rot, flipX) {
     mk('klingon', 'klingon_sheet.png');
   };
 })();
+
+// ════════════════════════════════════════════════════════════════════
+//  NEW FACTION SHEETS — Phase 2 batch
+// ════════════════════════════════════════════════════════════════════
+
+Sprites.CARD = {
+  // cardassian_sheet.png (1264x843)
+  galor_top      : [1063,  13,172,232],  // top-down
+  galor_fl       : [  14,  53,264, 99],  // front-left 3/4
+  galor_fr       : [ 295,  52,225,112],  // front-right 3/4
+  galor_frente   : [ 555,  53,224,113],  // frontal (head-on approach ← main)
+  galor_arriba   : [ 796,  44,229,158],  // top view
+  galor_rl       : [   0, 252,249,132],  // rear-left
+  galor_rl2      : [ 286, 251,238,157],  // rear-left alt
+  galor_rr       : [ 552, 250,227,139],  // rear-right
+  galor_sf       : [ 805, 293,212, 88],  // straight frontal (small)
+  galor_sr       : [1047, 294,204, 87],  // straight rear
+  keldon_frontal : [   9, 472,327, 73],  // Keldon frontal view (long)
+  keldon_top     : [ 793, 460,228,182],  // Keldon top view
+  keldon_bottom  : [1055, 450,192,225],  // Keldon bottom-up
+  keldon_fv      : [ 581, 502,185,111],  // Keldon front-view
+  keldon_fl      : [  13, 578,267,101],  // Keldon front-left
+  keldon_fr      : [ 298, 578,249, 98],  // Keldon front-right
+  keldon_rl      : [   9, 715,271,101],  // Keldon rear-left
+  keldon_rr      : [ 295, 718,262, 93],  // Keldon rear-right
+  keldon_sf      : [ 588, 728,188, 72],  // Keldon straight frontal
+  keldon_top2    : [ 804, 726,210, 83],  // Keldon top 2
+  keldon_bottom2 : [1054, 724,199, 86],  // Keldon bottom 2
+};
+
+Sprites.DOM = {
+  // dominion_sheet.png (1264x843)
+  jem_ref_a     : [ 469,  57,139, 57],  // Jem'Hadar ref small
+  jem_ref_b     : [1124,  57,138, 56],
+  jem_fl        : [  15,  80,162, 78],  // Attack Fighter front-left (main)
+  jem_fr        : [ 268,  79,161, 79],  // front-right
+  jemb_fl       : [ 652,  74,213, 86],  // Battle Cruiser front-left (main)
+  jemb_fr       : [ 883,  76,211, 85],  // front-right
+  jemb_side     : [1134, 147, 97,133],  // Battle Cruiser side
+  jem_top       : [ 485, 156,112,117],  // Fighter top view
+  jem_rl        : [  54, 191,161, 78],  // Fighter rear-left
+  jem_rr        : [ 263, 191,161, 79],  // rear-right
+  jemb_rl       : [ 647, 184,224, 89],  // Battle Cruiser rear-left
+  jemb_rr       : [ 889, 184,206, 91],  // rear-right
+  jem_straight  : [  38, 328,167, 60],  // Fighter straight-on (← main enemy)
+  jem_rear      : [ 249, 328,168, 61],  // Fighter rear view
+  jem_top2      : [ 481, 319,120, 87],  // Fighter top 2
+  gorn_raider   : [ 661, 322,163, 66],  // Gorn Raider side
+  jemb_top      : [ 860, 310,191, 98],  // Battle Cruiser top
+  jemb_bottom   : [1089, 316,146, 88],  // Battle Cruiser bottom
+  vorta_fl      : [ 214, 435,264,105],  // Vorta command ship front-left
+  vorta_fr      : [ 482, 439,211, 81],  // front-right
+  vorta_top     : [ 735, 441,165, 87],  // top
+  vorta_fr2     : [ 917, 444,178, 79],  // front 2
+  jem_fighter   : [  33, 451,145, 72],  // Fighter silhouette
+  phased_beam   : [1133, 454,117, 46],  // Phased polaron beam FX
+  vorta_fl2     : [  28, 580,231, 95],  // Vorta RL
+  vorta_rl      : [ 278, 580,232, 94],  // Vorta RL alt
+  vorta_top2    : [ 555, 598,147, 75],  // Vorta top 2
+  jemb_ref      : [ 715, 576,230, 99],  // Battle Cruiser ref
+  jemb_ref2     : [ 978, 578,183,113],
+  vorta_rl2     : [  21, 711,268,105],  // Vorta rear-left
+  vorta_rr      : [ 297, 705,271,111],  // Vorta rear-right
+  vorta_fv      : [ 761, 703,199,118],  // Vorta front view
+  jemb_large    : [1016, 703,207,118],  // Battle Cruiser large
+  vorta_top3    : [ 573, 724,153, 62],  // Vorta top 3
+};
+
+Sprites.SP8472 = {
+  // sp8472_sheet.png (1134x928)
+  bio_large_frente : [ 754, 106,361,112],  // Large bioship head-on (← main boss)
+  bio_sm_a      : [  29, 128, 84, 73],  // Small bioship angle a
+  bio_sm_b      : [ 154, 128, 82, 73],  // angle b
+  bio_sm_c      : [ 281, 128, 82, 73],  // angle c
+  bio_sm_d      : [ 431, 128, 83, 72],  // angle d
+  bio_sm_side   : [ 593, 250,132, 98],  // Small side view
+  bio_lg_side   : [ 750, 253,167, 87],  // Large side
+  bio_lg_side2  : [ 943, 259,139, 78],
+  bio_sm_top    : [  21, 516,152,229],  // Small top view (tall)
+  bio_sm_bot    : [ 202, 516,152,229],  // Small bottom
+  bio_sm_sup    : [ 370, 521,169,100],  // Small superior angle
+  bio_lg_top    : [ 602, 516,129,235],  // Large top (tall)
+  bio_lg_bot    : [ 775, 510,129,235],  // Large bottom
+  bio_lg_beam   : [ 909, 533,205,134],  // Large with focal beam
+  bio_lg_beam2  : [ 596, 793,320, 91],  // Large beam firing side
+};
+
+Sprites.AST = {
+  // asteroid_sheet.png (1264x843) — rotation sets (8 frames each)
+  // Row 1: small asteroids (indices 0-13, ~54x52px each)
+  rot8_sm: [
+    [ 26, 46, 54, 53], [111, 45, 58, 54], [200, 47, 54, 50], [294, 47, 55, 52],
+    [381, 49, 56, 47], [470, 48, 59, 48], [565, 46, 57, 52], [661, 44, 56, 55],
+  ],
+  // Row 2: more small (indices 14-26)
+  rot8_sm2: [
+    [ 22,133, 62, 41], [109,133, 60, 43], [201,127, 56, 51], [296,127, 55, 51],
+    [381,133, 60, 43], [469,130, 61, 47], [565,127, 56, 52], [661,126, 57, 54],
+  ],
+  // Large asteroids (various perspective angles)
+  large_a  : [ 26,245,141,123],
+  large_b  : [215,245,152,125],
+  large_c  : [408,247,175,119],
+  large_d  : [623,249,225,117],  // biggest
+  large_e  : [884,250,166,113],
+  // Rotation set (bottom, 8 frames ~81x81 each)
+  rot8_med: [
+    [ 17,738, 81, 79], [118,736, 81, 83], [222,735, 80, 83], [324,738, 81, 81],
+    [428,736, 80, 82], [529,735, 82, 83], [634,738, 81, 81],
+  ],
+  // Mineral/special
+  mineral_green : [ 27,442, 98, 85],
+  fractured_a   : [139,445, 87, 82],
+  volcanic_a    : [709,438,108, 94],
+  metallic_a    : [858,439, 85, 90],
+};
+
+Sprites.DS9 = {
+  // ds9_sheet.png (1264x843)
+  nor_class_panel  : [   7,  67,1245,473],  // Full top row (multiple views together)
+  outpost_fl       : [  27, 604,157, 62],   // Outpost front-left
+  outpost_fl2      : [ 193, 604,157, 61],
+  outpost_fr       : [ 362, 607,137, 57],
+  outpost_fl3      : [ 510, 603,153, 62],
+  outpost_fr2      : [ 675, 604,156, 62],
+  nor_perspective  : [ 853, 604,176,145],   // DS9 3/4 perspective view
+};
+
+// Draw helpers for new sheets
+Sprites.drawCardassian = function(ctx, name, cx, cy, scale, rot, flipX) {
+  const img = Sprites.sheets.cardassian;
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const r = Sprites.CARD[name]; if (!r) return false;
+  const dw=r[2]*scale, dh=r[3]*scale;
+  ctx.save(); ctx.translate(cx,cy);
+  if (rot) ctx.rotate(rot); if (flipX) ctx.scale(-1,1);
+  ctx.drawImage(img, r[0],r[1],r[2],r[3], -dw/2,-dh/2, dw,dh);
+  ctx.restore(); return true;
+};
+
+Sprites.drawDominion = function(ctx, name, cx, cy, scale, rot, flipX) {
+  const img = Sprites.sheets.dominion;
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const r = Sprites.DOM[name]; if (!r) return false;
+  const dw=r[2]*scale, dh=r[3]*scale;
+  ctx.save(); ctx.translate(cx,cy);
+  if (rot) ctx.rotate(rot); if (flipX) ctx.scale(-1,1);
+  ctx.drawImage(img, r[0],r[1],r[2],r[3], -dw/2,-dh/2, dw,dh);
+  ctx.restore(); return true;
+};
+
+Sprites.drawSp8472 = function(ctx, name, cx, cy, scale, rot) {
+  const img = Sprites.sheets.sp8472;
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const r = Sprites.SP8472[name]; if (!r) return false;
+  const dw=r[2]*scale, dh=r[3]*scale;
+  ctx.save(); ctx.translate(cx,cy);
+  if (rot) ctx.rotate(rot);
+  ctx.drawImage(img, r[0],r[1],r[2],r[3], -dw/2,-dh/2, dw,dh);
+  ctx.restore(); return true;
+};
+
+Sprites.drawAsteroid = function(ctx, frame8, cx, cy, scale) {
+  // frame8: 0-7 rotation frames from rot8_med set
+  const img = Sprites.sheets.asteroids;
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const r = Sprites.AST.rot8_med[frame8 % 7]; if (!r) return false;
+  const dw=r[2]*scale, dh=r[3]*scale;
+  ctx.save(); ctx.translate(cx,cy);
+  ctx.drawImage(img, r[0],r[1],r[2],r[3], -dw/2,-dh/2, dw,dh);
+  ctx.restore(); return true;
+};
+
+Sprites.drawDs9 = function(ctx, name, cx, cy, scale) {
+  const img = Sprites.sheets.ds9;
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const r = Sprites.DS9[name]; if (!r) return false;
+  const dw=r[2]*scale, dh=r[3]*scale;
+  ctx.save(); ctx.translate(cx,cy);
+  ctx.drawImage(img, r[0],r[1],r[2],r[3], -dw/2,-dh/2, dw,dh);
+  ctx.restore(); return true;
+};
+
+// Extend Sprites.load for new sheets
+(function() {
+  const _prev = Sprites.load.bind(Sprites);
+  Sprites.load = function(base) {
+    _prev(base);
+    const mk = (key, file) => {
+      const img = new Image();
+      img.onload = () => {};
+      img.onerror = () => console.warn('Failed:', file);
+      img.src = base + file;
+      Sprites.sheets[key] = img;
+    };
+    mk('cardassian', 'cardassian_sheet.png');
+    mk('dominion',   'dominion_sheet.png');
+    mk('sp8472',     'sp8472_sheet.png');
+    mk('asteroids',  'asteroid_sheet.png');
+    mk('ds9',        'ds9_sheet.png');
+  };
+})();

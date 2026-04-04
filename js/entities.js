@@ -172,6 +172,12 @@ class Enemy {
                 : type === 'dderidex'     ? 120
                 : type === 'vorcha'       ?  90
                 : type === 'valdore'      ?  80
+                : type === 'galor'        ?  75
+                : type === 'keldon'       ? 110
+                : type === 'jem_hadar'    ?  55
+                : type === 'jem_battle'   ? 140
+                : type === 'bioship'      ?  70
+                : type === 'bioship_lg'   ? 280
                 : type === 'asteroid'     ? Math.ceil(size * 3)
                 : 30;
     this.maxHp  = this.hp;
@@ -183,6 +189,12 @@ class Enemy {
                 : type === 'dderidex'     ?  350
                 : type === 'vorcha'       ?  250
                 : type === 'valdore'      ?  200
+                : type === 'galor'        ?  175
+                : type === 'keldon'       ?  280
+                : type === 'jem_hadar'    ?  150
+                : type === 'jem_battle'   ?  380
+                : type === 'bioship'      ?  200
+                : type === 'bioship_lg'   ?  800
                 : type === 'asteroid'     ?   50
                 : 100;
 
@@ -273,15 +285,21 @@ class Enemy {
       return;
     }
 
-    if      (this.type === 'bop')         Draw.birdOfPrey (ctx, this.sx, this.sy, this.scale * .72);
-    else if (this.type === 'borg')        Draw.borgCube   (ctx, this.sx, this.sy, this.scale, this.tick);
-    else if (this.type === 'borg_sphere') Draw.borgSphere (ctx, this.sx, this.sy, this.scale, this.tick);
-    else if (this.type === 'borg_scout')  Draw.borgScout  (ctx, this.sx, this.sy, this.scale, this.tick);
-    else if (this.type === 'borg_assimil')Draw.borgAssimil(ctx, this.sx, this.sy, this.scale, this.tick, this.firing);
-    else if (this.type === 'valdore')     Draw.valdore    (ctx, this.sx, this.sy, this.scale, this.tick);
-    else if (this.type === 'dderidex')    Draw.dderidex   (ctx, this.sx, this.sy, this.scale, this.tick);
-    else if (this.type === 'vorcha')      Draw.vorcha     (ctx, this.sx, this.sy, this.scale, this.tick);
-    else if (this.type === 'neghvar')     Draw.neghvar    (ctx, this.sx, this.sy, this.scale, this.tick);
+    if      (this.type === 'bop')         Draw.birdOfPrey   (ctx, this.sx, this.sy, this.scale * .72);
+    else if (this.type === 'borg')        Draw.borgCube     (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'borg_sphere') Draw.borgSphere   (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'borg_scout')  Draw.borgScout    (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'borg_assimil')Draw.borgAssimil  (ctx, this.sx, this.sy, this.scale, this.tick, this.firing);
+    else if (this.type === 'valdore')     Draw.valdore      (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'dderidex')    Draw.dderidex     (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'vorcha')      Draw.vorcha       (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'neghvar')     Draw.neghvar      (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'galor')       Draw.galor        (ctx, this.sx, this.sy, this.scale);
+    else if (this.type === 'keldon')      Draw.keldon       (ctx, this.sx, this.sy, this.scale);
+    else if (this.type === 'jem_hadar')   Draw.jemHadar     (ctx, this.sx, this.sy, this.scale);
+    else if (this.type === 'jem_battle')  Draw.jemHadarBattle(ctx, this.sx, this.sy, this.scale);
+    else if (this.type === 'bioship')     Draw.bioship      (ctx, this.sx, this.sy, this.scale, false);
+    else if (this.type === 'bioship_lg')  Draw.bioship      (ctx, this.sx, this.sy, this.scale, true);
     else if (this.type === 'asteroid') {
       const r = 38 * this.scale * (this.size || 1);
       Draw.asteroid(ctx, this.sx, this.sy, r, this.rotation, this.verts);
@@ -440,6 +458,46 @@ const Enemies = (() => {
         {type:'borg',     wx:  40, wy:  0, speed:bsp,    delay:4500},
         {type:'asteroid', wx: 300, wy:-50, speed:680, size:1.2, delay:5200},
         {type:'borg_assimil',wx:-20, wy: 0, speed:bsp*.65, delay:6500},
+      ],
+      // Wave 12 — Cardassian fleet
+      [
+        {type:'galor',   wx:-380, wy: 30,  speed:sp*1.15},
+        {type:'galor',   wx: 360, wy:-20,  speed:sp*1.15, delay:350},
+        {type:'galor',   wx:   0, wy: 10,  speed:sp*1.2,  delay:1200},
+        {type:'keldon',  wx:-200, wy: 40,  speed:sp*1.0,  delay:2400},
+        {type:'keldon',  wx: 220, wy:-30,  speed:sp*1.0,  delay:2400},
+        {type:'galor',   wx:-450, wy: 20,  speed:sp*1.3,  delay:3800},
+        {type:'galor',   wx: 430, wy:-40,  speed:sp*1.3,  delay:3800},
+        {type:'keldon',  wx:  30, wy: 10,  speed:sp*.9,   delay:5200},
+      ],
+      // Wave 13 — Dominion
+      [
+        {type:'jem_hadar',  wx:-350, wy: 20, speed:sp*1.6},
+        {type:'jem_hadar',  wx: 370, wy:-30, speed:sp*1.6, delay:200},
+        {type:'jem_battle', wx:-200, wy: 20, speed:sp*1.1, delay:1800},
+        {type:'jem_battle', wx: 220, wy:-20, speed:sp*1.1, delay:1800},
+        {type:'jem_hadar',  wx:-420, wy: 50, speed:sp*1.7, delay:3400},
+        {type:'jem_hadar',  wx: 440, wy:-50, speed:sp*1.7, delay:3400},
+        {type:'jem_battle', wx:  10, wy:  0, speed:sp*.95, delay:5000},
+      ],
+      // Wave 14 — Cardassian + Dominion + asteroids
+      [
+        {type:'asteroid',   wx:-320, wy: 20, speed:700, size:0.8},
+        {type:'jem_hadar',  wx: 350, wy:-20, speed:sp*1.5, delay:250},
+        {type:'galor',      wx:-180, wy: 30, speed:sp*1.1, delay:900},
+        {type:'asteroid',   wx: 150, wy:-30, speed:750, size:1.0, delay:1300},
+        {type:'jem_battle', wx: -30, wy: 10, speed:sp*.9,  delay:2200},
+        {type:'keldon',     wx: 260, wy:-40, speed:sp*1.0, delay:2200},
+        {type:'asteroid',   wx:-200, wy: 50, speed:680, size:1.2, delay:3200},
+        {type:'galor',      wx: -80, wy: 20, speed:sp*1.2, delay:4800},
+      ],
+      // Wave 15 — Species 8472 Bioships
+      [
+        {type:'bioship',    wx:-320, wy: 20, speed:sp*1.4},
+        {type:'bioship',    wx: 340, wy:-30, speed:sp*1.4, delay:300},
+        {type:'bioship',    wx: 120, wy:-20, speed:sp*1.35, delay:1200},
+        {type:'bioship_lg', wx: -40, wy:  0, speed:sp*.75, delay:4500},
+        {type:'bioship_lg', wx: 100, wy:-20, speed:sp*.70, delay:7000},
       ],
     ];
     const template = waves[Math.min(n-1, waves.length-1)];
