@@ -33,8 +33,8 @@ const CFG = {
 
   NOVA_COOLDOWN:   15,     // seconds
   NOVA_RING_SPEED: 950,    // px/second
-  NOVA_BTN_X:      1158,   // canvas px
-  NOVA_BTN_Y:       565,
+  NOVA_BTN_X:      1218,   // canvas px — inside right panel
+  NOVA_BTN_Y:       565,   // above bottom bar
   NOVA_BTN_R:        44,   // radius
 
   SHIELD_MAX:       100,
