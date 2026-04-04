@@ -347,7 +347,7 @@ const Enemies = (() => {
       ],
     ];
     const template = waves[Math.min(n-1, waves.length-1)];
-    return template.map(e => ({...e}));
+    return template.map(e => ({...e, delay: e.delay || 0}));  // CRITICAL: default delay=0
   }
 
   return {
