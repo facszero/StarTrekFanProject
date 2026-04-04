@@ -102,6 +102,7 @@ const Sprites = (() => {
       mk('borg',       'borg_sheet.png');
       mk('logo',       'logo.png');
       mk('hud_frame',  'hud_frame.png');
+      // picard loaded separately by HUD module (not needed as sprite)
     },
 
     // ── Draw helpers ─────────────────────────────────────────────
