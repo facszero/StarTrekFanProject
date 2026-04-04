@@ -152,6 +152,7 @@ const Game = (() => {
     Projectiles.reset();
     Particles.reset();
     Nova.reset();
+    BorgAdaptation.reset();
     HUD.init();
     Enemies.startWave(wave);
     HUD.alert('ENGAGE — WAVE 01', 2800);
@@ -178,7 +179,8 @@ const Game = (() => {
     titleTick += dt;
     if (state !== 'PLAYING') return;
     Player.update(dt, keys);
-    Phasers.update(dt, Player.x, Player.y);   // auto-beam always active
+    Phasers.update(dt, Player.x, Player.y);
+    BorgAdaptation.update(dt);
     Enemies.update(dt);
     Projectiles.update(dt);
     Particles.update(dt);
@@ -281,6 +283,8 @@ const Game = (() => {
     Nova.render(ctx);
     Player.render(ctx);
     Particles.render(ctx);
+    // Borg Adaptation overlay — drawn over game, under HUD frame
+    BorgAdaptation.render(ctx, (CFG.PLAYER_X_MIN + CFG.PLAYER_X_MAX)/2, CFG.HORIZON_Y + 20);
 
     // ── HUD frame overlay ────────────────────────────────────────
     const frameImg = Sprites.sheets && Sprites.sheets.hud_frame;
@@ -305,7 +309,8 @@ const Game = (() => {
       setupInput();
       refreshRect();
       Background.init(); Player.init(); Enemies.init();
-      Phasers.init(); Projectiles.init(); Particles.init(); Nova.init(); HUD.init();
+      Phasers.init(); Projectiles.init(); Particles.init(); Nova.init();
+      BorgAdaptation.init(); HUD.init();
       requestAnimationFrame(ts => { lastTs=ts; requestAnimationFrame(loop); });
     }
   };

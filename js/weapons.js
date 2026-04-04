@@ -120,8 +120,12 @@ const Phasers = (() => {
         bx1 = playerX; by1 = playerY;
         bx2 = target.sx; by2 = target.sy;
 
-        // Apply continuous damage
-        target.takeDamage(CFG.PHASER_DPS * dt);
+        // Apply continuous damage — reduced by Borg adaptation
+        const isBorg = target.type.startsWith('borg');
+        const mult   = isBorg ? BorgAdaptation.multiplier : 1.0;
+        const dmg    = CFG.PHASER_DPS * dt * mult;
+        target.takeDamage(dmg);
+        if (isBorg) BorgAdaptation.onPhaserHit(CFG.PHASER_DPS * dt);
         if (target.dead) Game.addScore(target.points);
 
         // Periodic particle hits (every 0.12s)
@@ -211,6 +215,7 @@ const Projectiles = (() => {
           if (U.circles(p.x, p.y, 10, e.sx, e.sy, 40*e.scale)) {
             e.takeDamage(CFG.TORPEDO_DAMAGE);
             if (e.dead) Game.addScore(e.points);
+            if (e.type && e.type.startsWith('borg')) BorgAdaptation.onTorpedoHit();
             Particles.torpImpact(p.x, p.y);
             p.dead = true; break;
           }
@@ -250,6 +255,7 @@ const Nova = (() => {
       cooldown = CFG.NOVA_COOLDOWN;
       HUD.alert('◎ NOVA DISCHARGE', 1800);
       Particles.explode(px, py, 60);
+      BorgAdaptation.onNova();
       return true;
     },
 
@@ -291,6 +297,112 @@ const Nova = (() => {
         ctx.beginPath(); ctx.arc(ring.x,ring.y,ring.r-9,0,Math.PI*2); ctx.stroke();
         ctx.restore();
       }
+    }
+  };
+})();
+
+// ═══════════════════════════════════════════════════════════════════
+//  BORG ADAPTATION  — Borg learn to resist phaser frequencies over time
+//  Based on TNG: Borg adapt to energy weapons, requiring frequency modulation.
+//  Mechanic:
+//    - Phasers deal reduced damage to Borg as adaptation builds (0–100%)
+//    - Torpedo hit disrupts adaptation (−25 per hit)
+//    - Nova resets adaptation completely
+//    - Slow natural decay between engagements
+//    - Visual: pulsing green "ADAPTATION LEVEL XX%" in game area
+// ═══════════════════════════════════════════════════════════════════
+const BorgAdaptation = (() => {
+  let level     = 0;   // 0–100 %
+  let showTimer = 0;   // seconds to show overlay
+
+  return {
+    get level()      { return level; },
+    get multiplier() {
+      // Damage multiplier: 1.0 at level 0, drops to 0.08 at level 100
+      return Math.max(0.08, 1 - (level / 108));
+    },
+    get active()     { return level > 2; },
+
+    init()  { level = 0; showTimer = 0; },
+    reset() { level = 0; showTimer = 0; },
+
+    // Call when phasers deal damage to a Borg entity
+    onPhaserHit(rawDamage) {
+      // Borg adapt faster than they take damage — each second of phaser fire builds 12%
+      level = Math.min(100, level + rawDamage * 0.8);
+      showTimer = 3.5;
+    },
+
+    // Call when a torpedo kills / hits a Borg — disrupts frequency lock
+    onTorpedoHit() {
+      level = Math.max(0, level - 25);
+      showTimer = 2.5;
+    },
+
+    // Call when Nova fires — overwhelming energy resets adaptation
+    onNova() {
+      level = 0;
+      showTimer = 0;
+    },
+
+    update(dt) {
+      // Slow natural decay (2%/second while not actively firing)
+      if (level > 0) level = Math.max(0, level - dt * 2.5);
+      if (showTimer > 0) showTimer -= dt;
+    },
+
+    render(ctx, gameAreaCX, gameAreaTop) {
+      if (level < 3) return;
+      const a = Math.min(1, level / 12) * (showTimer > 0 ? 1 : Math.min(1, level/40));
+      if (a < 0.05) return;
+
+      ctx.save();
+      ctx.globalAlpha = a;
+
+      const pct = level / 100;
+      const barW = 340, barH = 18;
+      const bx = gameAreaCX - barW/2;
+      const by = gameAreaTop + 45;
+
+      // Background panel
+      ctx.fillStyle = 'rgba(0,20,0,.75)';
+      U.rRect(ctx, bx-10, by-22, barW+20, barH+28, 4); ctx.fill();
+      ctx.strokeStyle = `rgba(0,${Math.floor(180+pct*75)},0,.6)`;
+      ctx.lineWidth = 1;
+      U.rRect(ctx, bx-10, by-22, barW+20, barH+28, 4); ctx.stroke();
+
+      // Label
+      const urgency = pct > .7 ? '#ff4444' : pct > .4 ? '#ffaa00' : '#00cc44';
+      ctx.fillStyle = urgency;
+      ctx.font = `bold 11px monospace`;
+      ctx.textAlign = 'center';
+      ctx.shadowColor = urgency; ctx.shadowBlur = 8;
+      ctx.fillText(`ADAPTATION LEVEL ${Math.ceil(level)}%`, gameAreaCX, by - 7);
+      ctx.shadowBlur = 0;
+
+      // Bar track
+      ctx.fillStyle = '#001400'; ctx.fillRect(bx, by, barW, barH);
+      ctx.strokeStyle = 'rgba(0,180,0,.3)'; ctx.lineWidth=.7; ctx.strokeRect(bx,by,barW,barH);
+
+      // Bar fill — color shifts red as adaptation grows
+      const rCol = Math.floor(pct * 220);
+      const gCol = Math.floor((1-pct) * 200 + 44);
+      ctx.fillStyle = `rgba(${rCol},${gCol},20,.9)`;
+      ctx.shadowColor = `rgb(${rCol},${gCol},20)`; ctx.shadowBlur = 8;
+      ctx.fillRect(bx+1, by+1, (barW-2)*pct, barH-2);
+      ctx.shadowBlur = 0;
+
+      // Segment ticks
+      ctx.strokeStyle = 'rgba(0,180,0,.15)'; ctx.lineWidth=.5;
+      for(let i=1;i<10;i++){const sx=bx+barW/10*i;ctx.beginPath();ctx.moveTo(sx,by+2);ctx.lineTo(sx,by+barH-2);ctx.stroke();}
+
+      // Warning when critical
+      if (pct > 0.75 && Math.sin(Date.now()/200) > 0) {
+        ctx.fillStyle = '#ff4444'; ctx.font = 'bold 9px monospace'; ctx.textAlign='center';
+        ctx.fillText('PHASERS INEFFECTIVE — USE TORPEDOES', gameAreaCX, by+barH+14);
+      }
+
+      ctx.restore();
     }
   };
 })();

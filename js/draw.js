@@ -251,13 +251,129 @@ const Draw = {
   },
 
   _borgScoutGlow(ctx, cx, cy, scale) {
-    const r = 66 * scale;  // matches 40px * 1.67x mult
+    const r = 66 * scale;
     const gr = ctx.createRadialGradient(cx,cy,0, cx,cy,r);
     gr.addColorStop(0,'rgba(0,180,50,.12)'); gr.addColorStop(1,'transparent');
     ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
   },
 
+  // ══════════════════════════════════════════════════════════════
+  //  ROMULAN SHIPS
+  //  Angle progression: frente (nose-on distant) → angle (mid) → arriba (close)
+  // ══════════════════════════════════════════════════════════════
 
+  valdore(ctx, cx, cy, scale, tick) {
+    const name = scale < 0.22 ? 'valdore_frente'
+               : scale < 0.52 ? 'valdore_angle'
+               :                'valdore_arriba_a';
+    if (Sprites.drawRomulan(ctx, name, cx, cy, scale * 1.44)) {
+      this._romulanGlow(ctx, cx, cy, scale); return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#142214';
+    ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(-55,8); ctx.lineTo(-38,18); ctx.lineTo(0,6); ctx.lineTo(38,18); ctx.lineTo(55,8); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#33bb55'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#22aa44'; ctx.shadowColor='#33cc55'; ctx.shadowBlur=10;
+    ctx.beginPath(); ctx.arc(-38,18,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(38,18,5,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  },
+
+  dderidex(ctx, cx, cy, scale, tick) {
+    const name = scale < 0.20 ? 'dderidex_frente'
+               : scale < 0.48 ? 'dderidex_angle'
+               :                'dderidex_arriba_a';
+    if (Sprites.drawRomulan(ctx, name, cx, cy, scale * 1.45)) {
+      this._romulanGlow(ctx, cx, cy, scale); return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#0e1e0e';
+    ctx.beginPath(); ctx.moveTo(0,-18); ctx.lineTo(-68,2); ctx.lineTo(-52,22); ctx.lineTo(0,8); ctx.lineTo(52,22); ctx.lineTo(68,2); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#44cc66'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#22aa44'; ctx.shadowColor='#33cc55'; ctx.shadowBlur=12;
+    ctx.beginPath(); ctx.arc(-52,22,6,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(52,22,6,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  },
+
+  _romulanGlow(ctx, cx, cy, scale) {
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,55*scale);
+    g.addColorStop(0,'rgba(30,180,60,.10)'); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,55*scale,0,Math.PI*2); ctx.fill();
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  //  KLINGON SHIPS
+  // ══════════════════════════════════════════════════════════════
+
+  vorcha(ctx, cx, cy, scale, tick) {
+    const name = scale < 0.22 ? 'vorcha_frente'
+               : scale < 0.52 ? 'vorcha_arriba'
+               :                'vorcha_large';
+    if (Sprites.drawKlingon(ctx, name, cx, cy, scale * 1.53)) {
+      this._klingonGlow(ctx, cx, cy, scale); return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#2a1200';
+    ctx.beginPath(); ctx.moveTo(0,-20); ctx.lineTo(-48,10); ctx.lineTo(-32,22); ctx.lineTo(0,8); ctx.lineTo(32,22); ctx.lineTo(48,10); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#cc5500'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#ff6600'; ctx.shadowColor='#ff8800'; ctx.shadowBlur=10;
+    ctx.beginPath(); ctx.arc(-32,22,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(32,22,4,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  },
+
+  neghvar(ctx, cx, cy, scale, tick) {
+    const name = scale < 0.20 ? 'neghvar_frente'
+               : scale < 0.48 ? 'neghvar_angle'
+               :                'neghvar_arriba';
+    if (Sprites.drawKlingon(ctx, name, cx, cy, scale * 1.87)) {
+      this._klingonGlow(ctx, cx, cy, scale); return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#2e0e00';
+    ctx.beginPath(); ctx.moveTo(0,-28); ctx.lineTo(-58,8); ctx.lineTo(-42,28); ctx.lineTo(0,12); ctx.lineTo(42,28); ctx.lineTo(58,8); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#bb3300'; ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='#ff5500'; ctx.shadowColor='#ff6600'; ctx.shadowBlur=14;
+    ctx.beginPath(); ctx.arc(-42,28,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(42,28,5,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0; ctx.restore();
+  },
+
+  _klingonGlow(ctx, cx, cy, scale) {
+    const g=ctx.createRadialGradient(cx,cy+18*scale,0,cx,cy+18*scale,60*scale);
+    g.addColorStop(0,'rgba(200,80,10,.14)'); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy+18*scale,60*scale,0,Math.PI*2); ctx.fill();
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  //  ASTEROID  — procedural tumbling rock
+  //  verts: array of [x,y] unit coords (−1..1), pre-generated
+  // ══════════════════════════════════════════════════════════════
+  asteroid(ctx, cx, cy, radius, rotation, verts) {
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(rotation);
+    ctx.beginPath();
+    verts.forEach(([x,y],i) => {
+      if(i===0) ctx.moveTo(x*radius,y*radius);
+      else      ctx.lineTo(x*radius,y*radius);
+    });
+    ctx.closePath();
+    const g=ctx.createRadialGradient(-radius*.25,-radius*.25,radius*.08, 0,0,radius);
+    g.addColorStop(0,'#8a8870'); g.addColorStop(.5,'#555548'); g.addColorStop(1,'#2e2e22');
+    ctx.fillStyle=g; ctx.fill();
+    ctx.strokeStyle='#66664a'; ctx.lineWidth=Math.max(1,radius*.04); ctx.stroke();
+    // Surface cracks
+    ctx.strokeStyle='rgba(30,30,20,.5)'; ctx.lineWidth=Math.max(.5,radius*.02);
+    ctx.beginPath();
+    ctx.moveTo(-radius*.3,-radius*.1); ctx.lineTo(-radius*.05,radius*.2); ctx.lineTo(radius*.25,radius*.05);
+    ctx.moveTo(radius*.1,-radius*.3); ctx.lineTo(radius*.0,radius*.0);
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  // ══════════════════════════════════════════════════════════════
+  //  WEAPONS
+  // ══════════════════════════════════════════════════════════════
   phaserBeam(ctx, x1, y1, x2, y2, alpha) {
     ctx.save(); ctx.globalAlpha = alpha;
     const gr = ctx.createLinearGradient(x1,y1,x2,y2);

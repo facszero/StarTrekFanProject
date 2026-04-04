@@ -145,20 +145,19 @@ const Player = (() => {
 //  ENEMY
 // ═══════════════════════════════════════════════════════════════════
 class Enemy {
-  constructor({ type='bop', wx=0, wy=0, speed=780, driftX=0, driftY=0 }) {
+  constructor({ type='bop', wx=0, wy=0, speed=780, driftX=0, driftY=0, size=1.0 }) {
     this.type   = type;
     this.worldX = wx;
-    this.worldY = wy;   // vertical offset (±60 typical)
+    this.worldY = wy;
     this.z      = CFG.Z_SPAWN;
     this.speed  = speed;
     this.driftX = driftX;
     this.driftY = driftY;
+    this.size   = size;   // used by asteroids
 
-    this.spawnX  = CFG.W/2 + wx * 0.038 + U.rnd(-12, 12);  // tiny jitter at spawn
+    this.spawnX  = CFG.W/2 + wx * 0.038 + U.rnd(-12, 12);
     this.spawnY  = CFG.HORIZON_Y + 6;
-    // targetX uses wider spread multiplier (0.85 vs old 0.60)
     this.targetX = CFG.W/2 + wx * 0.85;
-    // targetY: base approach + wy offset for vertical variety
     this.targetY = CFG.PLAYER_Y0 - 110 + wy;
 
     this.sx    = this.spawnX;
@@ -169,23 +168,47 @@ class Enemy {
                 : type === 'borg_sphere'  ? 150
                 : type === 'borg_scout'   ?  45
                 : type === 'borg_assimil' ? 380
+                : type === 'neghvar'      ? 150
+                : type === 'dderidex'     ? 120
+                : type === 'vorcha'       ?  90
+                : type === 'valdore'      ?  80
+                : type === 'asteroid'     ? Math.ceil(size * 3)
                 : 30;
     this.maxHp  = this.hp;
-    this.points = type === 'borg'         ? 500
-                : type === 'borg_sphere'  ? 350
-                : type === 'borg_scout'   ? 120
+    this.points = type === 'borg'         ?  500
+                : type === 'borg_sphere'  ?  350
+                : type === 'borg_scout'   ?  120
                 : type === 'borg_assimil' ? 1000
+                : type === 'neghvar'      ?  400
+                : type === 'dderidex'     ?  350
+                : type === 'vorcha'       ?  250
+                : type === 'valdore'      ?  200
+                : type === 'asteroid'     ?   50
                 : 100;
 
     this.dead          = false;
     this.readyToRemove = false;
     this.exploding     = false;
     this.exTimer       = 0;
-    this.exMax         = (type === 'borg' || type === 'borg_assimil') ? 1.4
-                       : type === 'borg_sphere' ? 1.1 : .75;
-    this.firing        = false;
-    this.hitByNova     = false;
-    this.tick          = 0;
+    this.exMax         = (type === 'borg' || type === 'borg_assimil' || type === 'neghvar' || type === 'dderidex') ? 1.4
+                       : (type === 'borg_sphere' || type === 'vorcha' || type === 'valdore') ? 1.0
+                       : type === 'asteroid' ? 0.5
+                       : .75;
+    this.firing    = false;
+    this.hitByNova = false;
+    this.tick      = 0;
+    this.rotation  = Math.random() * Math.PI * 2;  // for asteroids
+    this.rotSpeed  = type === 'asteroid' ? U.rnd(-1.8, 1.8) : 0;
+
+    // Asteroid: generate irregular polygon vertices once
+    if (type === 'asteroid') {
+      const n = 7 + Math.floor(Math.random() * 5);
+      this.verts = Array.from({length:n}, (_,i) => {
+        const a = (i/n) * Math.PI * 2;
+        const r = 0.65 + Math.random() * 0.35;
+        return [Math.cos(a)*r, Math.sin(a)*r];
+      });
+    }
   }
 
   get hitRadius() { return 50 * this.scale; }
@@ -204,6 +227,8 @@ class Enemy {
 
   update(dt) {
     this.tick += dt;
+    if (this.type === 'asteroid') this.rotation += this.rotSpeed * dt;
+
     if (this.exploding) {
       this.exTimer += dt;
       if (this.exTimer >= this.exMax) this.readyToRemove = true;
@@ -229,6 +254,10 @@ class Enemy {
         const dmg = this.type === 'borg_assimil' ? 50
                   : this.type === 'borg'          ? 35
                   : this.type === 'borg_sphere'   ? 28
+                  : this.type === 'neghvar'        ? 32
+                  : this.type === 'dderidex'       ? 28
+                  : this.type === 'vorcha'         ? 25
+                  : this.type === 'asteroid'       ? Math.ceil(18*(this.size||1))
                   : 22;
         Player.takeHit(dmg);
       }
@@ -249,6 +278,14 @@ class Enemy {
     else if (this.type === 'borg_sphere') Draw.borgSphere (ctx, this.sx, this.sy, this.scale, this.tick);
     else if (this.type === 'borg_scout')  Draw.borgScout  (ctx, this.sx, this.sy, this.scale, this.tick);
     else if (this.type === 'borg_assimil')Draw.borgAssimil(ctx, this.sx, this.sy, this.scale, this.tick, this.firing);
+    else if (this.type === 'valdore')     Draw.valdore    (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'dderidex')    Draw.dderidex   (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'vorcha')      Draw.vorcha     (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'neghvar')     Draw.neghvar    (ctx, this.sx, this.sy, this.scale, this.tick);
+    else if (this.type === 'asteroid') {
+      const r = 38 * this.scale * (this.size || 1);
+      Draw.asteroid(ctx, this.sx, this.sy, r, this.rotation, this.verts);
+    }
 
     // HP bar
     if (this.hp < this.maxHp && this.scale > .12) {
@@ -344,6 +381,65 @@ const Enemies = (() => {
         {type:'borg_assimil',wx: -20, wy:  0,  speed:bsp*.7,  delay:4200},
         {type:'borg_scout',  wx:-160, wy: 80,  speed:sp*1.6,  delay:5400},
         {type:'borg_scout',  wx: 180, wy:-30,  speed:sp*1.6,  delay:5400},
+      ],
+      // Wave 7 — Romulan patrol: Valdore + D'deridex
+      [
+        {type:'valdore',  wx:-380, wy: 20,  speed:sp*1.2},
+        {type:'valdore',  wx: 360, wy:-30,  speed:sp*1.2,  delay:400},
+        {type:'dderidex', wx:  40, wy: 10,  speed:sp*.95,  delay:2000},
+        {type:'valdore',  wx:-200, wy: 50,  speed:sp*1.3,  delay:3400},
+        {type:'valdore',  wx: 220, wy:-20,  speed:sp*1.3,  delay:3400},
+        {type:'dderidex', wx: -60, wy:-30,  speed:sp*.9,   delay:5000},
+      ],
+      // Wave 8 — Klingon heavy: B'rel swarm + Vor'cha + Negh'Var
+      [
+        {type:'bop',     wx:-300, wy: 30,  speed:sp*1.5},
+        {type:'bop',     wx: 320, wy:-20,  speed:sp*1.5,  delay:250},
+        {type:'vorcha',  wx:-150, wy: 20,  speed:sp*1.1,  delay:1400},
+        {type:'vorcha',  wx: 180, wy:-40,  speed:sp*1.1,  delay:1400},
+        {type:'bop',     wx:   0, wy: 10,  speed:sp*1.6,  delay:2600},
+        {type:'neghvar', wx: -30, wy:  0,  speed:sp*.85,  delay:4000},
+        {type:'bop',     wx:-400, wy: 50,  speed:sp*1.7,  delay:5300},
+        {type:'bop',     wx: 380, wy:-50,  speed:sp*1.7,  delay:5300},
+      ],
+      // Wave 9 — Multi-faction: Klingon + Romulan together
+      [
+        {type:'bop',     wx:-420, wy: 40,  speed:sp*1.4},
+        {type:'valdore', wx: 380, wy:-30,  speed:sp*1.2,  delay:300},
+        {type:'vorcha',  wx:-180, wy: 20,  speed:sp*1.1,  delay:1600},
+        {type:'dderidex',wx: 160, wy:-20,  speed:sp*.95,  delay:1600},
+        {type:'bop',     wx:   0, wy: 50,  speed:sp*1.5,  delay:2800},
+        {type:'neghvar', wx: -60, wy:-30,  speed:sp*.85,  delay:4200},
+        {type:'valdore', wx:-300, wy: 60,  speed:sp*1.3,  delay:5600},
+        {type:'bop',     wx: 300, wy:-40,  speed:sp*1.6,  delay:5600},
+      ],
+      // Wave 10 — Asteroid field + scattered attack
+      [
+        {type:'asteroid',wx:-350, wy: 20,  speed:680, size:0.7},
+        {type:'asteroid',wx: 280, wy:-10,  speed:750, size:0.9, delay:400},
+        {type:'bop',     wx:-200, wy: 30,  speed:sp*1.4, delay:800},
+        {type:'asteroid',wx:  60, wy: 40,  speed:600, size:1.1, delay:1200},
+        {type:'bop',     wx: 250, wy:-20,  speed:sp*1.4, delay:1400},
+        {type:'asteroid',wx:-100, wy:-30,  speed:800, size:0.6, delay:2000},
+        {type:'valdore', wx: -50, wy: 10,  speed:sp*1.2, delay:2800},
+        {type:'asteroid',wx: 350, wy: 50,  speed:700, size:1.0, delay:3200},
+        {type:'vorcha',  wx:-250, wy:-20,  speed:sp*1.1, delay:3800},
+        {type:'asteroid',wx: 150, wy:-40,  speed:650, size:0.8, delay:4400},
+        {type:'asteroid',wx:-200, wy: 30,  speed:720, size:0.5, delay:5000},
+        {type:'borg',    wx:  20, wy:  0,  speed:bsp,    delay:5800},
+      ],
+      // Wave 11 — Full Borg + Romulan + Asteroid (escalated repeat)
+      [
+        {type:'asteroid', wx:-300, wy: 30, speed:750, size:0.8},
+        {type:'borg_scout',wx: 350, wy:-20, speed:sp*1.8, delay:300},
+        {type:'asteroid', wx: 200, wy:-40, speed:700, size:1.1, delay:700},
+        {type:'borg_sphere',wx:-180, wy:20, speed:bsp*1.2, delay:1500},
+        {type:'dderidex', wx: 220, wy:-30, speed:sp*1.0, delay:1500},
+        {type:'asteroid', wx: -80, wy: 10, speed:820, size:0.6, delay:2400},
+        {type:'borg_scout',wx:-380, wy: 50, speed:sp*1.9, delay:3200},
+        {type:'borg',     wx:  40, wy:  0, speed:bsp,    delay:4500},
+        {type:'asteroid', wx: 300, wy:-50, speed:680, size:1.2, delay:5200},
+        {type:'borg_assimil',wx:-20, wy: 0, speed:bsp*.65, delay:6500},
       ],
     ];
     const template = waves[Math.min(n-1, waves.length-1)];
