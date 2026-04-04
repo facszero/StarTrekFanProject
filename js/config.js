@@ -44,7 +44,7 @@ const CFG = {
 
   NOVA_COOLDOWN:   15,     // seconds
   NOVA_RING_SPEED: 950,    // px/second
-  NOVA_BTN_X:      1197,   // inside right panel
+  MAX_WAVES:  15,    // after this → victory screen   // inside right panel
   NOVA_BTN_Y:       545,   // above frame's READY STATUS element (~y=587)
   NOVA_BTN_R:        38,
 
@@ -52,8 +52,8 @@ const CFG = {
   LIVES:            3,
 
   // ── Enemies ─────────────────────────────────────────────────────────────
-  BOP_SPEED_BASE:   900,   // z-units / second (faster than before)
-  BORG_SPEED_BASE:  540,
+  BOP_SPEED_BASE:   600,   // z-units/sec wave 1 → increases 65/wave up to ~1510 at wave 15
+  BORG_SPEED_BASE:  400,
 
   // ── Palette ─────────────────────────────────────────────────────────────
   C: {

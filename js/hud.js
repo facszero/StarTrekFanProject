@@ -60,38 +60,64 @@ const HUD = (() => {
     ctx.fillStyle=U.rgba(CFG.C.BORDER,.45);ctx.fillRect(0,CFG.FRAME_Y-1,CFG.W,1);
     const cy=Math.round(CFG.FRAME_Y/2);
 
-    // Score
+    // ── SCORE ───────────────────────────────────────────────────
     txt(ctx,14,cy-8,'SCORE',CFG.C.DIM,9);
     ctx.fillStyle=CFG.C.GOLD;ctx.shadowColor=U.rgba(CFG.C.GOLD,.5);ctx.shadowBlur=8;
     ctx.font='bold 22px monospace';
     ctx.fillText(String(score).padStart(7,'0'),12,cy+12);
     ctx.shadowBlur=0;
 
-    // Shield bar
+    // ── SHIELD BAR (narrower: bw 460→340) ─────────────────────
     const pct=U.clamp(Player.shields/CFG.SHIELD_MAX,0,1);
     const shCol=pct>.5?CFG.C.BLUE:pct>.25?'#ffaa00':'#ff3300';
-    const bx=280,bw=460,by=8,bh=15;
-    txt(ctx,CFG.W/2,7,'DEFLECTOR SHIELDS',CFG.C.DIM,9,'center');
+    const bx=284, bw=340, by=8, bh=14;
+    txt(ctx,CFG.W/2-80,7,'DEFLECTOR SHIELDS',CFG.C.DIM,8,'left');
     ctx.fillStyle='#02050e';U.rRect(ctx,bx,by,bw,bh,3);ctx.fill();
     ctx.strokeStyle=U.rgba(CFG.C.BORDER,.5);ctx.lineWidth=.8;U.rRect(ctx,bx,by,bw,bh,3);ctx.stroke();
     if(pct>0){
       ctx.fillStyle=shCol;ctx.shadowColor=shCol;ctx.shadowBlur=10;
       U.rRect(ctx,bx+1,by+1,(bw-2)*pct,bh-2,2);ctx.fill();ctx.shadowBlur=0;
     }
-    ctx.strokeStyle=U.rgba(CFG.C.BORDER,.18);ctx.lineWidth=.5;
-    for(let i=1;i<10;i++){const sx=bx+bw/10*i;ctx.beginPath();ctx.moveTo(sx,by+2);ctx.lineTo(sx,by+bh-2);ctx.stroke();}
-    txt(ctx,CFG.W/2,by+bh+12,Math.ceil(pct*100)+'%',CFG.C.TEXT,10,'center');
+    ctx.strokeStyle=U.rgba(CFG.C.BORDER,.15);ctx.lineWidth=.5;
+    for(let i=1;i<8;i++){const sx=bx+bw/8*i;ctx.beginPath();ctx.moveTo(sx,by+2);ctx.lineTo(sx,by+bh-2);ctx.stroke();}
+    txt(ctx,bx+bw/2,by+bh+11,Math.ceil(pct*100)+'%',CFG.C.TEXT,9,'center');
 
-    // Lives
-    txt(ctx,CFG.W-236,cy-8,'HULL',CFG.C.DIM,9);
+    // ── WAVE BADGE (right of shield bar) ──────────────────────
+    const wx2=bx+bw+10, wby=by;
+    ctx.fillStyle='#0a1828'; ctx.fillRect(wx2,wby,78,bh+14);
+    ctx.strokeStyle=U.rgba(CFG.C.BORDER,.5);ctx.lineWidth=.8;ctx.strokeRect(wx2,wby,78,bh+14);
+    txt(ctx,wx2+4,wby+8,'WAVE',CFG.C.DIM,7);
+    ctx.fillStyle=CFG.C.TEXT;ctx.shadowColor=U.rgba(CFG.C.TEXT,.4);ctx.shadowBlur=5;
+    ctx.font='bold 16px monospace';ctx.textAlign='left';
+    ctx.fillText(String(wave).padStart(2,'0'),wx2+30,wby+20);
+    ctx.shadowBlur=0;
+
+    // ── BORG ADAPTATION MINI (inline, after wave badge) ────────
+    const adapt = typeof BorgAdaptation !== 'undefined' ? BorgAdaptation.level : 0;
+    if (adapt > 2) {
+      const ax=wx2+86, abw=170, aby=by, abh=bh+14;
+      ctx.fillStyle='rgba(0,14,4,.85)';ctx.fillRect(ax,aby,abw,abh);
+      ctx.strokeStyle=U.rgba('#00cc44',.4);ctx.lineWidth=.7;ctx.strokeRect(ax,aby,abw,abh);
+      txt(ctx,ax+4,aby+8,'ADAPTATION',adapt>75?'#ff4444':adapt>40?'#ffaa00':'#00cc44',7);
+      // mini bar
+      ctx.fillStyle='#001400';ctx.fillRect(ax+4,aby+10,abw-8,6);
+      const aCol=adapt>75?'#ff3333':adapt>40?'#ffaa00':'#00cc44';
+      ctx.fillStyle=aCol;ctx.shadowColor=aCol;ctx.shadowBlur=4;
+      ctx.fillRect(ax+4,aby+10,(abw-8)*(adapt/100),6);
+      ctx.shadowBlur=0;
+      txt(ctx,ax+abw-4,aby+21,Math.ceil(adapt)+'%',aCol,7,'right');
+    }
+
+    // ── LIVES ──────────────────────────────────────────────────
+    txt(ctx,CFG.W-238,cy-8,'HULL',CFG.C.DIM,9);
     for(let i=0;i<CFG.LIVES;i++){
       const alive=i<Player.lives;
       ctx.fillStyle=alive?CFG.C.GOLD:U.rgba(CFG.C.GOLD,.18);
       if(alive){ctx.shadowColor=CFG.C.GOLD;ctx.shadowBlur=8;}
-      ctx.font='16px Arial';ctx.fillText('◈',CFG.W-234+i*24,cy+11);ctx.shadowBlur=0;
+      ctx.font='16px Arial';ctx.fillText('◈',CFG.W-236+i*24,cy+11);ctx.shadowBlur=0;
     }
 
-    // Torpedo
+    // ── TORPEDO ────────────────────────────────────────────────
     txt(ctx,CFG.W-120,cy-8,'TORPEDO',CFG.C.DIM,9);
     ctx.fillStyle=Player.torpedoes>0?CFG.C.BLUE:U.rgba(CFG.C.BLUE,.3);
     ctx.shadowColor=Player.torpedoes>0?CFG.C.BLUE:'transparent';ctx.shadowBlur=6;
@@ -107,8 +133,6 @@ const HUD = (() => {
       ctx.beginPath();ctx.arc(rx2,ry2,rr2,-Math.PI/2,-Math.PI/2+rp*Math.PI*2);ctx.stroke();
       ctx.shadowBlur=0;
     }
-
-    txt(ctx,CFG.W-6,cy+12,`WAVE ${String(wave).padStart(2,'0')}`,U.rgba(CFG.C.BORDER,.7),9,'right');
   }
 
   // ── LEFT PANEL ──────────────────────────────────────────────────

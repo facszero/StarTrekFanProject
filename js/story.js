@@ -19,7 +19,7 @@ const Story = (() => {
       num:      1,
       title:    'ACT I',
       name:     'KLINGON BORDER',
-      waves:    [1, 2, 3],
+      waves:    [1, 2, 3, 4, 5],          // 5 waves — ~45s at new speed
       bg:       'blue',
       quote:    '"Villains who twirl their mustaches are easy to spot. Those who clothe themselves in good deeds are well-camouflaged."',
       attr:     '— Captain Jean-Luc Picard',
@@ -30,7 +30,7 @@ const Story = (() => {
       num:      2,
       title:    'ACT II',
       name:     'DARK ALLIANCE',
-      waves:    [4, 5, 6],
+      waves:    [6, 7, 8, 9],             // 4 waves — Klingon+Romulan mix
       bg:       'green',
       quote:    '"The first duty of every Starfleet officer is to the truth."',
       attr:     '— Captain Jean-Luc Picard',
@@ -41,7 +41,7 @@ const Story = (() => {
       num:      3,
       title:    'ACT III',
       name:     'THE BORG COLLECTIVE',
-      waves:    [7, 8, 9, 10, 11],
+      waves:    [10, 11, 12],             // 3 waves — Borg + asteroid field
       bg:       'borg',
       quote:    '"I am Locutus of Borg. Resistance is futile."',
       attr:     '— The Borg / Jean-Luc Picard',
@@ -52,11 +52,11 @@ const Story = (() => {
       num:      4,
       title:    'ACT IV',
       name:     'FINAL FRONTIER',
-      waves:    [12, 13, 14, 15],
+      waves:    [13, 14, 15],             // 3 waves — Cardassian+Dominion+8472
       bg:       'deep',
       quote:    '"Space: the final frontier. These are the voyages of the starship Enterprise."',
       attr:     '— Captain Jean-Luc Picard',
-      mission:  'Multi-faction assault. Earth detected as target. Last stand.',
+      mission:  'Multi-faction assault. Earth is the target. Last stand.',
       picard:   'We have made too many compromises already. No more.',
     },
   ];
@@ -65,19 +65,19 @@ const Story = (() => {
   const WAVE_LINES = {
     1:  'All hands, battle stations.',
     2:  'Increase phaser frequency — they are compensating.',
-    3:  'Excellent work. Stand by for next engagement.',
-    4:  'A Romulan-Klingon alliance. Unexpected.',
-    5:  'Brace for impact — they are flanking us.',
-    6:  'We held the line. For now.',
-    7:  'The Borg. Of all the threats in the galaxy…',
-    8:  'They adapt to our phasers — use torpedoes.',
-    9:  'Shields at critical. Reroute power to deflectors.',
-   10:  'Asteroid field ahead. Navigate carefully.',
-   11:  'We cannot let the Borg reach Earth.',
-   12:  'Cardassian warships. Their tactics are brutal.',
-   13:  "The Dominion. Jem'Hadar do not take prisoners.",
-   14:  'Multiple fronts. Stay focused.',
-   15:  'Species 8472. No known weapon has stopped them.',
+    3:  'Good work. Maintain formation.',
+    4:  'More Klingon vessels inbound. Hold the line.',
+    5:  'We held the Klingon border. Stand by.',
+    6:  'A Romulan-Klingon alliance. Unexpected.',
+    7:  'Brace for impact — they are flanking us.',
+    8:  'Klingon and Romulan together. Their tactics are coordinated.',
+    9:  'We cannot let them through. Fire at will.',
+   10:  'The Borg. Of all the threats in the galaxy…',
+   11:  'They adapt to our phasers — use torpedoes.',
+   12:  'Shields at critical. Reroute power to deflectors.',
+   13:  'Cardassian warships. Their tactics are brutal.',
+   14:  "The Dominion. Jem'Hadar do not take prisoners.",
+   15:  'Species 8472. No known weapon has stopped them. Not yet.',
   };
 
   // ── State ────────────────────────────────────────────────────────
@@ -191,12 +191,12 @@ const Story = (() => {
       ctx.textAlign = 'left';
       ctx.fillText(act.title, 30, H*.38);
 
-      // Act name — large centered
+      // Act name — large centered with TNG font
       const nameAlpha = Math.min(1, (t-.05)*4) * (1-Math.max(0,(t-.8)*5));
       ctx.globalAlpha = nameAlpha;
-      ctx.shadowColor = CFG.C.GOLD; ctx.shadowBlur = 40;
+      ctx.shadowColor = CFG.C.GOLD; ctx.shadowBlur = 44;
       ctx.fillStyle = CFG.C.GOLD;
-      ctx.font = `bold 68px monospace`;
+      ctx.font = `bold 66px "StarTrekTNG", monospace`;
       ctx.textAlign = 'center';
       ctx.fillText(act.name, W/2, H*.48);
       ctx.shadowBlur = 0;

@@ -51,8 +51,7 @@ const Game = (() => {
 
   // ── Unified tap handler ────────────────────────────────────────
   function handleTap(cx, cy) {
-    if (state !== 'PLAYING') { _startGame(); return; }
-    if (isNovaBtn(cx, cy)) { Nova.fire(Player.x, Player.y); return; }
+    if (state !== 'PLAYING') { _startGame(); return; }    if (isNovaBtn(cx, cy)) { Nova.fire(Player.x, Player.y); return; }
 
     const target = findEnemyAt(cx, cy);
     if (target) {
@@ -163,10 +162,17 @@ const Game = (() => {
 
   function _nextWave() {
     wave++;
+    if (wave > CFG.MAX_WAVES) { _triggerVictory(); return; }
     Story.onWaveStart(wave);
     Enemies.startWave(wave);
     setTimeout(() =>
       HUD.alert(`WAVE ${String(wave).padStart(2,'0')} — INCOMING`, 3000), 120);
+  }
+
+  function _triggerVictory() {
+    state = 'VICTORY';
+    HUD.alert('MISSION COMPLETE — ENTERPRISE RETURNS HOME', 8000);
+    Background.setTheme('blue');
   }
 
   // ── Main loop ───────────────────────────────────────────────────
@@ -302,6 +308,29 @@ const Game = (() => {
     Story.render(ctx);   // cinematic overlay (acts as full-screen when active)
     if (state==='PAUSED')    renderPause();
     if (state==='GAME_OVER') renderGameOver();
+    if (state==='VICTORY')   renderVictory();
+  }
+
+  function renderVictory() {
+    const cx=CFG.W/2, cy=CFG.H/2;
+    ctx.save();
+    ctx.fillStyle='rgba(0,0,20,.85)'; ctx.fillRect(0,0,CFG.W,CFG.H);
+    // TNG font for title
+    ctx.shadowColor='#c8a840'; ctx.shadowBlur=40;
+    ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 62px "StarTrekTNG",monospace';
+    ctx.textAlign='center'; ctx.fillText('MISSION COMPLETE',cx,cy-60);
+    ctx.shadowBlur=0;
+    ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 20px monospace';
+    ctx.fillText('The USS Enterprise-D has returned to Federation space.',cx,cy+10);
+    ctx.fillStyle=CFG.C.DIM; ctx.font='16px monospace';
+    ctx.fillText('"Resistance was not futile."',cx,cy+44);
+    ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 22px monospace';
+    ctx.fillText('FINAL SCORE: '+String(score).padStart(7,'0'),cx,cy+90);
+    if(Math.sin(Date.now()/500)>0){
+      ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 15px monospace';
+      ctx.fillText('[ TAP OR PRESS ENTER TO PLAY AGAIN ]',cx,cy+140);
+    }
+    ctx.textAlign='left'; ctx.restore();
   }
 
   // ── Public ──────────────────────────────────────────────────────

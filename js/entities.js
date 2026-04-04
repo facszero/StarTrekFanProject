@@ -331,6 +331,12 @@ class Enemy {
 // ═══════════════════════════════════════════════════════════════════
 const Enemies = (() => {
   let _list = [], queue = [], waveActive = false;
+  let _astTimer = 0;    // countdown to next random asteroid
+  let _astBase  = 12;   // base interval seconds between random asteroids
+
+  function _newAstInterval() {
+    return U.rnd(_astBase * 0.5, _astBase * 1.5);
+  }
 
   function buildWave(n) {
     const sp  = CFG.BOP_SPEED_BASE + (n-1)*65;
@@ -506,8 +512,8 @@ const Enemies = (() => {
 
   return {
     get list() { return _list; },
-    init()  { _list=[]; queue=[]; waveActive=false; },
-    reset() { _list=[]; queue=[]; waveActive=false; },
+    init()  { _list=[]; queue=[]; waveActive=false; _astTimer=_newAstInterval(); },
+    reset() { _list=[]; queue=[]; waveActive=false; _astTimer=_newAstInterval(); },
 
     isWaveClear() {
       return waveActive && queue.length===0
@@ -525,6 +531,26 @@ const Enemies = (() => {
         if(item.delay<=0){_list.push(new Enemy(item));return false;}
         return true;
       });
+
+      // ── Random asteroid spawner ───────────────────────────────
+      if (waveActive) {
+        _astTimer -= dt;
+        if (_astTimer <= 0) {
+          // Inject 1-2 random asteroids at scattered positions
+          const count = Math.random() < 0.35 ? 2 : 1;
+          for (let i=0; i<count; i++) {
+            _list.push(new Enemy({
+              type:  'asteroid',
+              wx:    U.rnd(-480, 480),
+              wy:    U.rnd(-50, 60),
+              speed: U.rnd(600, 900),
+              size:  U.rnd(0.5, 1.2),
+            }));
+          }
+          _astTimer = _newAstInterval();
+        }
+      }
+
       for(const e of _list) e.update(dt);
       _list = _list.filter(e=>!e.readyToRemove);
     },
