@@ -1,0 +1,27 @@
+{
+  "name": "Star Trek: Final Frontier",
+  "short_name": "Final Frontier",
+  "description": "USS Enterprise-D Tactical Engagement Simulator — Fan Arcade",
+  "start_url": "/StarTrekFanProject/",
+  "scope": "/StarTrekFanProject/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#04081600",
+  "theme_color": "#c8a840",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "en"
+}
