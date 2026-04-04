@@ -12,6 +12,14 @@
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <title>Star Trek: Final Frontier — Fan Arcade</title>
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () =>
+        navigator.serviceWorker.register('./sw.js')
+          .catch(e => console.warn('SW:', e))
+      );
+    }
+  </script>
 </head>
 <body>
   <!-- Portrait orientation overlay (Option A) -->
