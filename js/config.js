@@ -43,9 +43,10 @@ const CFG = {
   TORPEDO_RECHARGE: 8000,
 
   NOVA_COOLDOWN:   15,     // seconds
-  NOVA_RING_SPEED: 950,    // px/second
-  MAX_WAVES:  15,    // after this → victory screen   // inside right panel
-  NOVA_BTN_Y:       545,   // above frame's READY STATUS element (~y=587)
+  NOVA_RING_SPEED: 950,
+  MAX_WAVES:  15,
+  NOVA_BTN_X:      1197,
+  NOVA_BTN_Y:       620,   // below right panel bottom (HUD_RIGHT_H=545), visible in frame
   NOVA_BTN_R:        38,
 
   SHIELD_MAX:       100,

@@ -295,8 +295,6 @@ const Game = (() => {
     Nova.render(ctx);
     Player.render(ctx);
     Particles.render(ctx);
-    // Borg Adaptation overlay — drawn over game, under HUD frame
-    BorgAdaptation.render(ctx, (CFG.PLAYER_X_MIN + CFG.PLAYER_X_MAX)/2, CFG.HORIZON_Y + 20);
 
     // ── HUD frame overlay ────────────────────────────────────────
     const frameImg = Sprites.sheets && Sprites.sheets.hud_frame;
