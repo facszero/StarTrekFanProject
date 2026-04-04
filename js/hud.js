@@ -310,7 +310,6 @@ const HUD = (() => {
     const bx=CFG.NOVA_BTN_X,by_=CFG.NOVA_BTN_Y,br=CFG.NOVA_BTN_R;
     const ready=Nova.ready,pct=Nova.cooldownPct;
 
-    solidBg(ctx,bx-br-6,by_-br-6,br*2+12,br*2+12,'#060c18');
     ctx.save();
     if(ready){ctx.shadowColor='#44aaff';ctx.shadowBlur=22;}
     ctx.beginPath();ctx.arc(bx,by_,br,0,Math.PI*2);

@@ -45,9 +45,9 @@ const CFG = {
   NOVA_COOLDOWN:   15,     // seconds
   NOVA_RING_SPEED: 950,
   MAX_WAVES:  15,
-  NOVA_BTN_X:      1197,
-  NOVA_BTN_Y:       620,   // below right panel bottom (HUD_RIGHT_H=545), visible in frame
-  NOVA_BTN_R:        38,
+  NOVA_BTN_X:       960,   // right side of game viewport (frame transparent)
+  NOVA_BTN_Y:       480,   // lower game area, frame is transparent here
+  NOVA_BTN_R:        44,   // slightly larger for mobile tap
 
   SHIELD_MAX:       100,
   LIVES:            3,
