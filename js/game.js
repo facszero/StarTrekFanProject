@@ -52,19 +52,14 @@ const Game = (() => {
   // ── Unified tap handler ────────────────────────────────────────
   function handleTap(cx, cy) {
     if (state !== 'PLAYING') { _startGame(); return; }
+    if (isNovaBtn(cx, cy)) { Nova.fire(Player.x, Player.y); return; }
 
-    // Nova button
-    if (isNovaBtn(cx, cy)) {
-      Nova.fire(Player.x, Player.y);
-      return;
-    }
-
-    // Tap on enemy → phaser
     const target = findEnemyAt(cx, cy);
     if (target) {
-      Player.firePhaserAt(target);
+      // Tap on enemy → lock phasers onto it as priority target
+      Player.setPriorityTarget(target);
     } else {
-      // Tap on empty space → torpedo
+      // Tap on empty → fire torpedo
       Player.fireTorpedo();
     }
   }
@@ -153,6 +148,7 @@ const Game = (() => {
     score = 0; wave = 1;
     Player.reset();
     Enemies.reset();
+    Phasers.reset();
     Projectiles.reset();
     Particles.reset();
     Nova.reset();
@@ -182,6 +178,7 @@ const Game = (() => {
     titleTick += dt;
     if (state !== 'PLAYING') return;
     Player.update(dt, keys);
+    Phasers.update(dt, Player.x, Player.y);   // auto-beam always active
     Enemies.update(dt);
     Projectiles.update(dt);
     Particles.update(dt);
@@ -279,6 +276,7 @@ const Game = (() => {
     Background.render(ctx);
     if (state==='TITLE') { renderTitle(); return; }
     Enemies.render(ctx);
+    Phasers.render(ctx);
     Projectiles.render(ctx);
     Nova.render(ctx);
     Player.render(ctx);
@@ -307,7 +305,7 @@ const Game = (() => {
       setupInput();
       refreshRect();
       Background.init(); Player.init(); Enemies.init();
-      Projectiles.init(); Particles.init(); Nova.init(); HUD.init();
+      Phasers.init(); Projectiles.init(); Particles.init(); Nova.init(); HUD.init();
       requestAnimationFrame(ts => { lastTs=ts; requestAnimationFrame(loop); });
     }
   };

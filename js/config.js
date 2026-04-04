@@ -37,16 +37,15 @@ const CFG = {
   PLAYER_PITCH_RATE: 3.2,
   PLAYER_MAX_PITCH:  0.14, // forward/backward tilt radians
 
-  PHASER_INTERVAL:  95,    // ms (kept for reference only, auto-fire removed)
-  PHASER_DAMAGE:     8,
+  PHASER_DPS:       15,    // hp/second continuous beam (auto-targets nearest enemy)
   TORPEDO_MAX:      15,
   TORPEDO_DAMAGE:   45,
-  TORPEDO_RECHARGE: 8000,  // ms per torpedo auto-recharge
+  TORPEDO_RECHARGE: 8000,
 
   NOVA_COOLDOWN:   15,     // seconds
   NOVA_RING_SPEED: 950,    // px/second
-  NOVA_BTN_X:      1197,   // inside right panel, above Damage Control
-  NOVA_BTN_Y:       640,   // bottom area within frame
+  NOVA_BTN_X:      1197,   // inside right panel
+  NOVA_BTN_Y:       545,   // above frame's READY STATUS element (~y=587)
   NOVA_BTN_R:        38,
 
   SHIELD_MAX:       100,

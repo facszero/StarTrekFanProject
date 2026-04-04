@@ -40,9 +40,9 @@ const Player = (() => {
     },
 
     // Called from game.js on tap-on-enemy
-    firePhaserAt(enemy) {
-      if (!enemy || enemy.dead) return;
-      Projectiles.firePhaserAt(x, y, enemy);
+    // Tap on enemy → sets priority target for sustained phaser beam
+    setPriorityTarget(enemy) {
+      Phasers.setPriorityTarget(enemy);
     },
 
     // Called from game.js on tap-on-empty or Space key

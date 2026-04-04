@@ -9,12 +9,14 @@ const Draw = {
   //  USS ENTERPRISE-D
   // ══════════════════════════════════════════════════════════════
   enterprise(ctx, cx, cy, scale, bank, pitch) {
-    // bankNorm: 0 = hard-left, 0.5 = straight, 1 = hard-right
     const bankNorm = U.clamp((bank + CFG.PLAYER_MAX_BANK) / (CFG.PLAYER_MAX_BANK * 2), 0, 1);
 
-    if (Sprites.drawPlayer(ctx, cx, cy, scale, bankNorm)) {
-      // Sprite-based: apply subtle scale-Y squish to simulate pitch
-      // (already drawn; we can't re-draw, so pitch is shown via thruster offset)
+    // new enterprise_angles sprites: front_below=435px wide, target≈200px → scale*0.46
+    // old enterprise_sheet sprites: bank frames 190-330px wide
+    // We let Sprites.drawPlayer handle the choice; we scale for ~200px display width
+    const spriteScale = scale * 0.46;
+
+    if (Sprites.drawPlayer(ctx, cx, cy, spriteScale, bankNorm)) {
       this._thruster(ctx, cx, cy + (pitch || 0) * 12 * scale, scale);
       return;
     }

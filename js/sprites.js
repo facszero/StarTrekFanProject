@@ -18,7 +18,13 @@ const Sprites = (() => {
     exp_strip:   [383, 773, 1153, 218],
   };
 
-  // ── enemy_sheet.png  (1264×843) ──────────────────────────────────
+  // ── enterprise_angles.png  (963×538) — new detailed sprites ─────
+  const ANG = {
+    front_below : [ 38, 251, 435, 276],  // main player view (center banking)
+    bank_left   : [ 66,  28, 332, 174],  // left bank (also used flipped for right)
+    straight    : [434,  24, 262, 197],  // straight-on with engine fire
+    top_view    : [661, 215, 266, 186],  // top-down
+  };
   const ENM = {
     brel:       [563, 319, 161,  92],
     borg_cube:  [523,  18, 124, 122],   // legacy (will be replaced by BORG atlas)
@@ -98,6 +104,7 @@ const Sprites = (() => {
         sheets[key] = img;
       };
       mk('enterprise', 'enterprise_sheet.png');
+      mk('enterprise_angles', 'enterprise_angles.png');
       mk('enemy',      'enemy_sheet.png');
       mk('borg',       'borg_sheet.png');
       mk('logo',       'logo.png');
@@ -107,7 +114,37 @@ const Sprites = (() => {
 
     // ── Draw helpers ─────────────────────────────────────────────
 
+    // Draw Enterprise-D player sprite with banking animation.
+    // bankNorm: 0.0=hard-left, 0.5=center, 1.0=hard-right
+    // Uses enterprise_angles.png when loaded, falls back to enterprise_sheet.png frames.
     drawPlayer(ctx, cx, cy, scale, bankNorm) {
+      const angImg = sheets.enterprise_angles;
+      const angReady = angImg && angImg.complete && angImg.naturalWidth;
+
+      if (angReady) {
+        // Smooth 3-sprite interpolation: bank_left ↔ front_below ↔ bank_right(flipped)
+        const dev = Math.abs(bankNorm - 0.5) * 2;  // 0=center, 1=full bank
+        const goLeft = bankNorm < 0.5;
+
+        // At center: front_below. At full bank: bank_left (or flipped).
+        let r;
+        if (dev < 0.35) {
+          r = ANG.front_below;
+        } else {
+          r = ANG.bank_left;
+        }
+
+        const dw = r[2] * scale, dh = r[3] * scale;
+        ctx.save();
+        ctx.translate(cx, cy);
+        // Flip horizontally for right bank
+        if (!goLeft && dev >= 0.35) ctx.scale(-1, 1);
+        ctx.drawImage(angImg, r[0], r[1], r[2], r[3], -dw/2, -dh/2, dw, dh);
+        ctx.restore();
+        return true;
+      }
+
+      // Fallback: enterprise_sheet.png 5-frame bank strip
       const img = sheets.enterprise;
       if (!img || !img.complete || !img.naturalWidth) return false;
       const fi = Math.round(U.clamp(bankNorm, 0, 1) * 4);
