@@ -86,6 +86,18 @@ const HUD = (() => {
     ctx.fillStyle=Player.torpedoes>0?CFG.C.BLUE:CFG.C.DIM;
     ctx.font='bold 28px "Courier New"'; ctx.fillText(String(Player.torpedoes).padStart(2,'0'),CFG.W-104,40);
 
+    // Recharge arc under torpedo count
+    if (Player.torpedoes < CFG.TORPEDO_MAX) {
+      const pct = Player.rechargeProgress;
+      const rx2 = CFG.W-90, ry2 = 46, rr2 = 6;
+      ctx.strokeStyle = U.rgba(CFG.C.BLUE, .3); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(rx2, ry2, rr2, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = CFG.C.BLUE;
+      ctx.shadowColor = CFG.C.BLUE; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.arc(rx2, ry2, rr2, -Math.PI/2, -Math.PI/2 + pct*Math.PI*2); ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
     // Wave badge (top right)
     ctx.fillStyle=U.rgba(CFG.C.BORDER,.6); ctx.font='bold 9px "Courier New"';
     ctx.textAlign='right'; ctx.fillText(`WAVE ${String(wave).padStart(2,'0')}`,CFG.W-8,48); ctx.textAlign='left';
@@ -225,6 +237,69 @@ const HUD = (() => {
     Draw.corner(ctx,0,CFG.H-80,s,1,col); Draw.corner(ctx,CFG.W,CFG.H-80,s,-1,col);
   }
 
+  // ── Nova button ────────────────────────────────────────────────────
+  function drawNovaButton(ctx) {
+    const bx = CFG.NOVA_BTN_X, by = CFG.NOVA_BTN_Y, br = CFG.NOVA_BTN_R;
+    const ready = Nova.ready;
+    const pct   = Nova.cooldownPct;  // 0 = just fired → 1 = ready
+
+    ctx.save();
+    // Outer glow ring when ready
+    if (ready) {
+      ctx.shadowColor = '#44aaff'; ctx.shadowBlur = 22;
+    }
+    // Background
+    ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI*2);
+    ctx.fillStyle = ready ? '#0a1828' : '#080e18'; ctx.fill();
+    ctx.strokeStyle = ready ? '#44aaff' : '#1a3050';
+    ctx.lineWidth = ready ? 2 : 1.5; ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Cooldown fill arc (pie chart style)
+    if (!ready && pct > 0) {
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.arc(bx, by, br-2, -Math.PI/2, -Math.PI/2 + pct*Math.PI*2);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(30,70,120,.38)'; ctx.fill();
+    }
+
+    // Cooldown border arc (progress ring)
+    if (!ready) {
+      ctx.strokeStyle = U.rgba(CFG.C.BLUE, .5); ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(bx, by, br-1, -Math.PI/2, -Math.PI/2 + pct*Math.PI*2);
+      ctx.stroke();
+    }
+
+    // Icon
+    if (ready && Math.sin(Date.now()/350) > -.3) {
+      ctx.shadowColor = '#44aaff'; ctx.shadowBlur = 18;
+    }
+    ctx.fillStyle = ready ? '#88ccff' : '#2a4a6a';
+    ctx.font = '26px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('◎', bx, by - 7);
+    ctx.shadowBlur = 0;
+
+    // Label / countdown
+    if (ready) {
+      ctx.fillStyle = CFG.C.TEXT; ctx.font = 'bold 9px "Courier New"';
+      ctx.fillText('NOVA', bx, by + 14);
+      // "READY" blink
+      if (Math.sin(Date.now()/380) > 0) {
+        ctx.fillStyle = '#44aaff'; ctx.font = 'bold 8px "Courier New"';
+        ctx.fillText('READY', bx, by + 25);
+      }
+    } else {
+      ctx.fillStyle = '#44aaff'; ctx.font = 'bold 13px "Courier New"';
+      ctx.fillText(Math.ceil(Nova.cooldown) + 's', bx, by + 13);
+      ctx.fillStyle = '#1a3050'; ctx.font = 'bold 8px "Courier New"';
+      ctx.fillText('NOVA', bx, by + 25);
+    }
+
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+  }
+
   // ══════════════════════════════════════════════════════════════════
   return {
     init()  { alerts=[]; floatScores=[]; tick=0; },
@@ -248,6 +323,7 @@ const HUD = (() => {
       drawLeft   (ctx);
       drawBottom (ctx);
       drawCorners(ctx);
+      drawNovaButton(ctx);
       drawAlerts (ctx);
       drawFloats (ctx);
     }
