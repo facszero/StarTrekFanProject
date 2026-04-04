@@ -284,11 +284,10 @@ const Game = (() => {
     Player.render(ctx);
     Particles.render(ctx);
 
-    // ── HUD frame overlay (drawn OVER game, UNDER text HUD) ──────
+    // ── HUD frame overlay ────────────────────────────────────────
     const frameImg = Sprites.sheets && Sprites.sheets.hud_frame;
     if (frameImg && frameImg.complete && frameImg.naturalWidth) {
-      const fw=1280, fh=604, fy=58;   // scaled: 1492×704 → 1280×604, centered
-      ctx.drawImage(frameImg, 0, fy, fw, fh);
+      ctx.drawImage(frameImg, 0, CFG.FRAME_Y, 1280, CFG.FRAME_H);
     }
 
     HUD.render(ctx, score, wave, dt);
