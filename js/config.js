@@ -25,11 +25,11 @@ const CFG = {
   PLAYER_X_MAX:     1055,  // frame viewport right - 18px
 
   // ── HUD panel boundaries (match frame panels) ────────────────────────
-  HUD_LEFT_W:   259,   // left panel right edge (purple column in frame)
-  HUD_LEFT_H:   430,   // left panel bottom (just above Engineering Data ~y=443)
+  HUD_LEFT_W:   259,   // left panel right edge
+  HUD_LEFT_H:   493,   // just below our Engineering Data items → covers frame's EPS labels
   HUD_RIGHT_X:  1079,  // right panel left edge
-  HUD_RIGHT_H:  435,   // right panel bottom (just above Damage Control ~y=440)
-  HUD_TOP_H:    110,   // top bar height (frame top area)
+  HUD_RIGHT_H:  545,   // covers frame's Photon Torpedoes labels
+  HUD_TOP_H:    110,
   PLAYER_SPEED:     520,   // px/s lateral
   PLAYER_SPEED_Y:   340,   // px/s vertical (slightly tighter than lateral)
   PLAYER_BANK_RATE:  4.5,
