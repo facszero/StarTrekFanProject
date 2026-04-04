@@ -145,19 +145,21 @@ const Player = (() => {
 //  ENEMY
 // ═══════════════════════════════════════════════════════════════════
 class Enemy {
-  constructor({ type='bop', wx=0, wy=-80, speed=780, driftX=0, driftY=0 }) {
+  constructor({ type='bop', wx=0, wy=0, speed=780, driftX=0, driftY=0 }) {
     this.type   = type;
     this.worldX = wx;
-    this.worldY = wy;
+    this.worldY = wy;   // vertical offset (±60 typical)
     this.z      = CFG.Z_SPAWN;
     this.speed  = speed;
     this.driftX = driftX;
     this.driftY = driftY;
 
-    this.spawnX  = CFG.W/2 + wx * 0.038;
+    this.spawnX  = CFG.W/2 + wx * 0.038 + U.rnd(-12, 12);  // tiny jitter at spawn
     this.spawnY  = CFG.HORIZON_Y + 6;
-    this.targetX = CFG.W/2 + wx * 0.60;
-    this.targetY = CFG.PLAYER_Y0 - 110;
+    // targetX uses wider spread multiplier (0.85 vs old 0.60)
+    this.targetX = CFG.W/2 + wx * 0.85;
+    // targetY: base approach + wy offset for vertical variety
+    this.targetY = CFG.PLAYER_Y0 - 110 + wy;
 
     this.sx    = this.spawnX;
     this.sy    = this.spawnY;
@@ -212,8 +214,8 @@ class Enemy {
     this.z      -= this.speed * dt;
     this.worldX += this.driftX * dt * 60;
 
-    this.targetX = CFG.W/2 + this.worldX * 0.60;
-    this.targetY = Player.y - 110;
+    this.targetX = CFG.W/2 + this.worldX * 0.85;
+    this.targetY = Player.y - 110 + this.worldY;
 
     const t = U.easeIn(U.clamp(1 - this.z / CFG.Z_SPAWN, 0, 1));
     this.sx    = U.lerp(this.spawnX, this.targetX, t);
@@ -276,17 +278,76 @@ const Enemies = (() => {
   let _list = [], queue = [], waveActive = false;
 
   function buildWave(n) {
-    const sp = CFG.BOP_SPEED_BASE + (n-1)*75;
+    const sp  = CFG.BOP_SPEED_BASE + (n-1)*65;
+    const bsp = CFG.BORG_SPEED_BASE + n*30;
+
+    // Helper: random position enemy
+    const rnd = (type, opts={}) => ({
+      type,
+      wx:    opts.wx    ?? U.rnd(-480, 480),
+      wy:    opts.wy    ?? U.rnd(-60, 60),
+      speed: opts.speed ?? sp,
+      driftX:opts.driftX ?? 0,
+      delay: opts.delay  ?? 0,
+    });
+
     const waves = [
-      [{type:'bop',wx:0,speed:sp},{type:'bop',wx:-200,speed:sp,delay:1100},{type:'bop',wx:200,speed:sp,delay:1100}],
-      [{type:'bop',wx:0,speed:sp*1.1},{type:'bop',wx:-180,speed:sp*1.1,delay:700},{type:'bop',wx:180,speed:sp*1.1,delay:700},{type:'bop',wx:-340,speed:sp*1.1,delay:1400},{type:'bop',wx:340,speed:sp*1.1,delay:1400}],
-      [{type:'bop',wx:-420,speed:sp*1.2,driftX:2.5},{type:'bop',wx:420,speed:sp*1.2,driftX:-2.5},{type:'bop',wx:0,speed:sp*1.2,delay:1600},{type:'bop',wx:-200,speed:sp*1.2,delay:2600},{type:'bop',wx:200,speed:sp*1.2,delay:2600},{type:'bop',wx:0,speed:sp*1.4,delay:3800}],
-      [{type:'bop',wx:-250,speed:sp*1.1},{type:'bop',wx:250,speed:sp*1.1,delay:500},{type:'borg',wx:0,speed:CFG.BORG_SPEED_BASE+n*40,delay:3000},{type:'bop',wx:-180,speed:sp*1.2,delay:4200},{type:'bop',wx:180,speed:sp*1.2,delay:4200}],
-      [{type:'borg_scout',wx:-300,speed:sp*1.6},{type:'borg_scout',wx:300,speed:sp*1.6,delay:300},{type:'borg_scout',wx:0,speed:sp*1.6,delay:800},{type:'borg_sphere',wx:-160,speed:CFG.BORG_SPEED_BASE+n*35,delay:2200},{type:'borg_sphere',wx:160,speed:CFG.BORG_SPEED_BASE+n*35,delay:2200},{type:'borg_scout',wx:-400,speed:sp*1.7,delay:3800},{type:'borg_scout',wx:400,speed:sp*1.7,delay:3800}],
-      [{type:'borg_scout',wx:-350,speed:sp*1.5},{type:'borg_scout',wx:350,speed:sp*1.5,delay:400},{type:'borg_sphere',wx:-200,speed:CFG.BORG_SPEED_BASE+n*30,delay:1800},{type:'borg_sphere',wx:200,speed:CFG.BORG_SPEED_BASE+n*30,delay:1800},{type:'borg_assimil',wx:0,speed:CFG.BORG_SPEED_BASE*.7,delay:4500},{type:'borg_scout',wx:-150,speed:sp*1.6,delay:5500},{type:'borg_scout',wx:150,speed:sp*1.6,delay:5500}],
+      // Wave 1 — 3 BOPs, spread entry
+      [
+        {type:'bop', wx:  0,   wy:  0,  speed:sp},
+        {type:'bop', wx:-280,  wy: 30,  speed:sp,   delay:900},
+        {type:'bop', wx: 320,  wy:-20,  speed:sp,   delay:900},
+      ],
+      // Wave 2 — V formation, wider
+      [
+        {type:'bop', wx:   0,  wy:  0,  speed:sp*1.1},
+        {type:'bop', wx:-240,  wy: 40,  speed:sp*1.1, delay:600},
+        {type:'bop', wx: 260,  wy: 40,  speed:sp*1.1, delay:600},
+        {type:'bop', wx:-440,  wy: 80,  speed:sp*1.1, delay:1300},
+        {type:'bop', wx: 460,  wy: 80,  speed:sp*1.1, delay:1300},
+      ],
+      // Wave 3 — flanking pincer from both sides
+      [
+        {type:'bop', wx:-500,  wy: 20,  speed:sp*1.2, driftX: 3.0},
+        {type:'bop', wx: 500,  wy: 20,  speed:sp*1.2, driftX:-3.0},
+        {type:'bop', wx:-200,  wy:-40,  speed:sp*1.25, delay:1400},
+        {type:'bop', wx: 220,  wy: 60,  speed:sp*1.25, delay:1800},
+        {type:'bop', wx:  80,  wy:-30,  speed:sp*1.3,  delay:2600},
+        {type:'bop', wx:-360,  wy: 10,  speed:sp*1.4,  delay:3500},
+      ],
+      // Wave 4 — first Borg + escort, varied Y
+      [
+        {type:'bop',  wx:-350, wy: 50,  speed:sp*1.1},
+        {type:'bop',  wx: 380, wy:-30,  speed:sp*1.1,  delay:400},
+        {type:'borg', wx:  30, wy:-20,  speed:bsp,      delay:2800},
+        {type:'bop',  wx:-180, wy: 70,  speed:sp*1.2,   delay:4000},
+        {type:'bop',  wx: 200, wy:-50,  speed:sp*1.2,   delay:4000},
+        {type:'bop',  wx: -60, wy: 30,  speed:sp*1.35,  delay:5200},
+      ],
+      // Wave 5 — Borg scout swarms + spheres
+      [
+        {type:'borg_scout', wx:-350, wy: 40,  speed:sp*1.7},
+        {type:'borg_scout', wx: 380, wy:-20,  speed:sp*1.7,  delay:250},
+        {type:'borg_scout', wx: -80, wy: 60,  speed:sp*1.65, delay:700},
+        {type:'borg_scout', wx: 120, wy:-50,  speed:sp*1.65, delay:950},
+        {type:'borg_sphere',wx:-220, wy: 20,  speed:bsp*1.1, delay:2000},
+        {type:'borg_sphere',wx: 250, wy:-30,  speed:bsp*1.1, delay:2000},
+        {type:'borg_scout', wx:-480, wy: 80,  speed:sp*1.8,  delay:3600},
+        {type:'borg_scout', wx: 460, wy:-60,  speed:sp*1.8,  delay:3600},
+      ],
+      // Wave 6 — Assimilation ship boss + mixed escort
+      [
+        {type:'borg_scout',  wx:-420, wy: 60,  speed:sp*1.5},
+        {type:'borg_scout',  wx: 440, wy:-40,  speed:sp*1.5,  delay:350},
+        {type:'borg_sphere', wx:-260, wy: 30,  speed:bsp*1.1, delay:1600},
+        {type:'borg_sphere', wx: 280, wy:-60,  speed:bsp*1.1, delay:1600},
+        {type:'borg_assimil',wx: -20, wy:  0,  speed:bsp*.7,  delay:4200},
+        {type:'borg_scout',  wx:-160, wy: 80,  speed:sp*1.6,  delay:5400},
+        {type:'borg_scout',  wx: 180, wy:-30,  speed:sp*1.6,  delay:5400},
+      ],
     ];
     const template = waves[Math.min(n-1, waves.length-1)];
-    return template.map(e => ({...e, delay: e.delay||0}));
+    return template.map(e => ({...e}));
   }
 
   return {

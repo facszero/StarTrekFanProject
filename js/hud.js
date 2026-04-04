@@ -46,8 +46,8 @@ const HUD = (() => {
     ctx.fillStyle=U.rgba(CFG.C.BORDER,.25); ctx.fillRect(0,0,CFG.W,3);
 
     // Score
-    ctx.fillStyle=CFG.C.DIM;  ctx.font='bold 10px "Courier New"'; ctx.fillText('SCORE',14,16);
-    ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 26px "Courier New"';
+    ctx.fillStyle=CFG.C.DIM;  ctx.font='bold 10px monospace'; ctx.fillText('SCORE',14,16);
+    ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 26px monospace';
     ctx.fillText(String(score).padStart(7,'0'),12,42);
 
     // Shields bar (center)
@@ -55,7 +55,7 @@ const HUD = (() => {
     const pct=U.clamp(Player.shields/CFG.SHIELD_MAX,0,1);
     const col=pct>.5?CFG.C.BLUE:pct>.25?'#ffaa00':'#ff3300';
 
-    ctx.fillStyle=CFG.C.DIM; ctx.font='bold 9px "Courier New"';
+    ctx.fillStyle=CFG.C.DIM; ctx.font='bold 9px monospace';
     ctx.textAlign='center'; ctx.fillText('DEFLECTOR SHIELDS',CFG.W/2,11); ctx.textAlign='left';
 
     ctx.fillStyle='#080e16'; U.rRect(ctx,bx,by,bw,bh,3); ctx.fill();
@@ -71,20 +71,20 @@ const HUD = (() => {
     ctx.strokeStyle=U.rgba(CFG.C.BORDER,.35); ctx.lineWidth=.5;
     for(let i=1;i<10;i++){const sx=bx+bw/10*i;ctx.beginPath();ctx.moveTo(sx,by+2);ctx.lineTo(sx,by+bh-2);ctx.stroke();}
 
-    ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 11px "Courier New"';
+    ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 11px monospace';
     ctx.textAlign='center'; ctx.fillText(Math.ceil(pct*100)+'%',CFG.W/2,by+bh+12); ctx.textAlign='left';
 
     // Lives
-    ctx.fillStyle=CFG.C.DIM; ctx.font='bold 9px "Courier New"'; ctx.fillText('HULL',CFG.W-225,13);
+    ctx.fillStyle=CFG.C.DIM; ctx.font='bold 9px monospace'; ctx.fillText('HULL',CFG.W-225,13);
     for(let i=0;i<Player.lives;i++){
       ctx.fillStyle=CFG.C.GOLD; ctx.font='19px Arial';
       ctx.fillText('◈',CFG.W-223+i*30,38);
     }
 
     // Torpedo count
-    ctx.fillStyle=CFG.C.DIM; ctx.font='bold 9px "Courier New"'; ctx.fillText('TORPEDO',CFG.W-108,13);
+    ctx.fillStyle=CFG.C.DIM; ctx.font='bold 9px monospace'; ctx.fillText('TORPEDO',CFG.W-108,13);
     ctx.fillStyle=Player.torpedoes>0?CFG.C.BLUE:CFG.C.DIM;
-    ctx.font='bold 28px "Courier New"'; ctx.fillText(String(Player.torpedoes).padStart(2,'0'),CFG.W-104,40);
+    ctx.font='bold 28px monospace'; ctx.fillText(String(Player.torpedoes).padStart(2,'0'),CFG.W-104,40);
 
     // Recharge arc under torpedo count
     if (Player.torpedoes < CFG.TORPEDO_MAX) {
@@ -99,7 +99,7 @@ const HUD = (() => {
     }
 
     // Wave badge (top right)
-    ctx.fillStyle=U.rgba(CFG.C.BORDER,.6); ctx.font='bold 9px "Courier New"';
+    ctx.fillStyle=U.rgba(CFG.C.BORDER,.6); ctx.font='bold 9px monospace';
     ctx.textAlign='right'; ctx.fillText(`WAVE ${String(wave).padStart(2,'0')}`,CFG.W-8,48); ctx.textAlign='left';
   }
 
@@ -114,7 +114,7 @@ const HUD = (() => {
     ctx.fillStyle='#0c1520'; ctx.fillRect(fX,fY,fW,fH);
     ctx.strokeStyle=CFG.C.BORDER; ctx.lineWidth=1.5; ctx.strokeRect(fX,fY,fW,fH);
     drawPortrait(ctx,fX,fY,fW,fH);
-    ctx.fillStyle=CFG.C.DIM; ctx.font='bold 9px "Courier New"';
+    ctx.fillStyle=CFG.C.DIM; ctx.font='bold 9px monospace';
     ctx.fillText('CAPT. PICARD',fX-2,fY+fH+14);
 
     // Status bars
@@ -125,7 +125,7 @@ const HUD = (() => {
     ];
     bars.forEach(({label,val,col},i)=>{
       const bx=fX,by=fY+fH+22+i*23;
-      ctx.fillStyle=CFG.C.DIM; ctx.font='8px "Courier New"'; ctx.fillText(label,bx,by);
+      ctx.fillStyle=CFG.C.DIM; ctx.font='8px monospace'; ctx.fillText(label,bx,by);
       ledBar(ctx,bx+22,by-9,fW+26,11,val,col);
     });
   }
@@ -162,7 +162,7 @@ const HUD = (() => {
       ctx.fillText(b.icon,bx+bw/2,bby+28); ctx.shadowBlur=0;
 
       ctx.fillStyle=b.active?CFG.C.TEXT:CFG.C.DIM;
-      ctx.font='bold 8px "Courier New"'; ctx.fillText(b.label,bx+bw/2,bby+46);
+      ctx.font='bold 8px monospace'; ctx.fillText(b.label,bx+bw/2,bby+46);
       ctx.textAlign='left';
 
       if(b.active){
@@ -196,7 +196,7 @@ const HUD = (() => {
       ctx.fill();
     }
 
-    ctx.fillStyle=CFG.C.DIM; ctx.font='8px "Courier New"';
+    ctx.fillStyle=CFG.C.DIM; ctx.font='8px monospace';
     ctx.textAlign='center'; ctx.fillText('TACTICAL',rx,by+bh-6); ctx.textAlign='left';
   }
 
@@ -213,7 +213,7 @@ const HUD = (() => {
 
     const blink=Math.sin(tick*9)>0||top.timer>top.maxTimer*.7;
     ctx.fillStyle=blink?CFG.C.ALERT:U.rgba(CFG.C.ALERT,.5);
-    ctx.font='bold 13px "Courier New"'; ctx.textAlign='center';
+    ctx.font='bold 13px monospace'; ctx.textAlign='center';
     ctx.fillText(top.text,CFG.W/2,ay+25);
     ctx.textAlign='left'; ctx.restore();
   }
@@ -222,7 +222,7 @@ const HUD = (() => {
   function drawFloats(ctx) {
     for(const f of floatScores){
       ctx.save(); ctx.globalAlpha=f.life/f.maxLife;
-      ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 15px "Courier New"';
+      ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 15px monospace';
       ctx.textAlign='center'; ctx.fillText(f.text,f.x,f.y); ctx.textAlign='left';
       ctx.restore();
     }
@@ -282,17 +282,17 @@ const HUD = (() => {
 
     // Label / countdown
     if (ready) {
-      ctx.fillStyle = CFG.C.TEXT; ctx.font = 'bold 9px "Courier New"';
+      ctx.fillStyle = CFG.C.TEXT; ctx.font = 'bold 9px monospace';
       ctx.fillText('NOVA', bx, by + 14);
       // "READY" blink
       if (Math.sin(Date.now()/380) > 0) {
-        ctx.fillStyle = '#44aaff'; ctx.font = 'bold 8px "Courier New"';
+        ctx.fillStyle = '#44aaff'; ctx.font = 'bold 8px monospace';
         ctx.fillText('READY', bx, by + 25);
       }
     } else {
-      ctx.fillStyle = '#44aaff'; ctx.font = 'bold 13px "Courier New"';
+      ctx.fillStyle = '#44aaff'; ctx.font = 'bold 13px monospace';
       ctx.fillText(Math.ceil(Nova.cooldown) + 's', bx, by + 13);
-      ctx.fillStyle = '#1a3050'; ctx.font = 'bold 8px "Courier New"';
+      ctx.fillStyle = '#1a3050'; ctx.font = 'bold 8px monospace';
       ctx.fillText('NOVA', bx, by + 25);
     }
 

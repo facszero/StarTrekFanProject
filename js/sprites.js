@@ -100,6 +100,7 @@ const Sprites = (() => {
       mk('enterprise', 'enterprise_sheet.png');
       mk('enemy',      'enemy_sheet.png');
       mk('borg',       'borg_sheet.png');
+      mk('logo',       'logo.png');
     },
 
     // ── Draw helpers ─────────────────────────────────────────────

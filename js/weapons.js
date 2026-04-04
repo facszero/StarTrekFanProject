@@ -22,6 +22,7 @@ const Particles = (() => {
     reset() { pool = []; },
     torpImpact(x, y) { spark(x, y, 22, ['#4499ff','#88ccff','#ffffff','#aaddff'], 1.4); },
     phaserHit (x, y) { spark(x, y,  8, ['#ff8830','#ffcc44','#ffffff'], .8); },
+    flash(x, y, r)   { pool.push({ type:'flash', x, y, r, life:.24, maxLife:.24 }); },
     explode(x, y, r) {
       spark(x, y, 32, CFG.C.EXP, 1 + r*.025);
       pool.push({ type:'flash', x, y, r, life:.32, maxLife:.32 });
@@ -73,7 +74,7 @@ const Projectiles = (() => {
         x1: fromX, y1: fromY,
         x2: target.sx, y2: target.sy,
         target,
-        life: .20, maxLife: .20,
+        life: 0.45, maxLife: 0.45,   // longer — 0.20 was too short on mobile
         hit: false, dead: false,
       });
     },
@@ -102,11 +103,12 @@ const Projectiles = (() => {
 
         if (p.type === 'phaser') {
           p.life -= dt;
-          // Instant damage on first frame
           if (!p.hit && p.target && !p.target.dead) {
             p.target.takeDamage(CFG.PHASER_DAMAGE);
             p.hit = true;
+            // Bright impact flash at hit point
             Particles.phaserHit(p.x2, p.y2);
+            Particles.flash(p.x2, p.y2, 28);
             if (p.target.dead) Game.addScore(p.target.points);
           }
           if (p.life <= 0) p.dead = true;

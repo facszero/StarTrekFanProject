@@ -32,12 +32,16 @@ const Game = (() => {
 
   // ── Find enemy at canvas position (for tap-targeting) ──────────
   function findEnemyAt(cx, cy) {
+    let best = null, bestD = Infinity;
     for (const e of Enemies.list) {
-      if (e.dead || e.scale < .05) continue;
-      const hitR = Math.max(38, 55 * e.scale);
-      if (Math.hypot(cx - e.sx, cy - e.sy) < hitR) return e;
+      if (e.dead || e.scale < .04) continue;
+      // Generous hit radius: at least 70px, scales with enemy size
+      // On mobile the canvas is CSS-scaled down, so we need extra room
+      const hitR = Math.max(70, 80 * e.scale);
+      const d = Math.hypot(cx - e.sx, cy - e.sy);
+      if (d < hitR && d < bestD) { bestD = d; best = e; }
     }
-    return null;
+    return best;
   }
 
   // ── Nova button hit test ───────────────────────────────────────
@@ -191,34 +195,54 @@ const Game = (() => {
     const cx = CFG.W / 2;
     ctx.fillStyle = 'rgba(0,0,12,.72)'; ctx.fillRect(0,0,CFG.W,CFG.H);
 
-    Draw.enterprise(ctx, cx, 310, 1.1, Math.sin(titleTick*.5)*.12, 0);
-    const tg=ctx.createRadialGradient(cx,318,0,cx,318,55);
+    // Enterprise-D slowly banking
+    Draw.enterprise(ctx, cx, 400, 1.15, Math.sin(titleTick*.5)*.12, 0);
+    const tg=ctx.createRadialGradient(cx,408,0,cx,408,60);
     tg.addColorStop(0,'rgba(80,140,255,.45)'); tg.addColorStop(1,'transparent');
-    ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(cx,318,55,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(cx,408,60,0,Math.PI*2); ctx.fill();
 
-    ctx.save(); ctx.shadowColor='#4488ff'; ctx.shadowBlur=28;
-    ctx.fillStyle='#aaccff'; ctx.font='bold 15px "Courier New"';
-    ctx.textAlign='center'; ctx.fillText('STAR TREK',cx,108); ctx.shadowBlur=0; ctx.restore();
-
-    ctx.save(); ctx.shadowColor=CFG.C.GOLD; ctx.shadowBlur=30;
-    ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 64px "Courier New"';
-    ctx.textAlign='center'; ctx.fillText('FINAL FRONTIER',cx,178); ctx.shadowBlur=0; ctx.restore();
-
-    ctx.fillStyle=CFG.C.BORDER; ctx.fillRect(cx-320,188,640,2);
-    ctx.fillStyle='#7a8a9a'; ctx.font='15px "Courier New"'; ctx.textAlign='center';
-    ctx.fillText('USS Enterprise-D  ·  Tactical Engagement Simulator',cx,212);
-    ctx.fillText('Fan Project — Not for Commercial Use',cx,232);
-
-    if (Math.sin(Date.now()/480)>0) {
-      ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 16px "Courier New"';
-      ctx.fillText('[ TAP OR PRESS ENTER TO ENGAGE ]',cx,448);
+    // Game logo — use sprite if loaded, fallback to canvas text
+    const logo = Sprites.sheets && Sprites.sheets.logo;
+    if (logo && logo.complete && logo.naturalWidth) {
+      // Draw logo centered, scaled to fit nicely (target ~700px wide)
+      const LW = 700, LH = Math.round(700 * (688/1529));
+      const lx = cx - LW/2, ly = 52;
+      ctx.save();
+      ctx.shadowColor = 'rgba(150,120,50,.6)'; ctx.shadowBlur = 28;
+      ctx.drawImage(logo, lx, ly, LW, LH);
+      ctx.shadowBlur = 0; ctx.restore();
+    } else {
+      // Fallback canvas text
+      ctx.save(); ctx.shadowColor=CFG.C.GOLD; ctx.shadowBlur=30;
+      ctx.fillStyle='#aaccff'; ctx.font='bold 14px Arial,sans-serif';
+      ctx.textAlign='center'; ctx.fillText('STAR TREK', cx, 82);
+      ctx.fillStyle=CFG.C.GOLD; ctx.font='bold 60px Arial,sans-serif';
+      ctx.fillText('FINAL FRONTIER', cx, 162);
+      ctx.shadowBlur=0; ctx.restore();
     }
 
-    ctx.fillStyle=U.rgba(CFG.C.DIM,.85); ctx.font='12px "Courier New"';
-    ctx.fillText('DRAG / ← → ↑ ↓     Move ship',cx,500);
-    ctx.fillText('TAP on enemy        Phaser (targeted)',cx,521);
-    ctx.fillText('TAP on empty / SPACE  Photon torpedo (homing)',cx,542);
-    ctx.fillText('Nova button / N     Area-clear discharge',cx,563);
+    // Subtitle
+    ctx.fillStyle='#7a8a9a'; ctx.font='14px Arial,sans-serif'; ctx.textAlign='center';
+    ctx.fillText('USS Enterprise-D  ·  Tactical Engagement Simulator', cx, 330);
+    ctx.fillText('Fan Project — Not for Commercial Use', cx, 350);
+
+    // Decorative line
+    ctx.fillStyle=CFG.C.BORDER; ctx.fillRect(cx-280, 362, 560, 1);
+
+    // Prompt blink
+    if (Math.sin(Date.now()/480)>0) {
+      ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 15px Arial,sans-serif';
+      ctx.fillText('[ TAP OR PRESS ENTER TO ENGAGE ]', cx, 448);
+    }
+
+    // Controls — use Arial to avoid Courier New garbling on Android
+    ctx.fillStyle=U.rgba(CFG.C.DIM,.9); ctx.font='13px Arial,sans-serif';
+    const col1 = cx - 180, col2 = cx + 10;
+    ctx.textAlign='left';
+    ctx.fillText('DRAG / Arrows',   col1, 490); ctx.fillText('Move ship',               col2, 490);
+    ctx.fillText('Tap on enemy',    col1, 512); ctx.fillText('Fire phaser (targeted)',   col2, 512);
+    ctx.fillText('Tap empty / Space', col1, 534); ctx.fillText('Photon torpedo (homing)', col2, 534);
+    ctx.fillText('Nova btn / N',    col1, 556); ctx.fillText('Area-clear discharge',     col2, 556);
     ctx.textAlign='left';
   }
 
