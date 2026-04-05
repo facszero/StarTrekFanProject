@@ -154,9 +154,9 @@ const Game = (() => {
     Phasers.reset(); Projectiles.reset(); Particles.reset();
     Nova.reset(); EnemyFire.reset(); BorgAdaptation.reset();
     BgExplosions.reset();
+    TitleMusic.fadeOut(0.8);
     Story.init();
     Story.onGameStart();
-    TitleMusic.fadeOut();
     HUD.init();
     Enemies.startWave(wave);
     HUD.alert('ENGAGE — WAVE 01', 2800);
@@ -225,7 +225,7 @@ const Game = (() => {
     Projectiles.update(dt);
     Particles.update(dt);
     Nova.update(dt);
-    if (Enemies.isWaveClear()) _nextWave();
+    if (!_waveStartPending && Enemies.isWaveClear()) _nextWave();
     if (Player.lives <= 0) state = 'GAME_OVER';
   }
 
