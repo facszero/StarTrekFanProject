@@ -41,6 +41,14 @@ const Background = (() => {
   // ── Photo backgrounds ─────────────────────────────────────────
   const BG_PHOTOS = { blue:'assets/bg/bg_act1.jpg', green:'assets/bg/bg_act2.jpg',
                       borg:'assets/bg/bg_act3.jpg', deep:'assets/bg/bg_act4.jpg' };
+  // Act V: per-wave backgrounds (Lore progression)
+  const BG_WAVES = {
+    16:'assets/bg/bg_wave16.jpg', 17:'assets/bg/bg_wave17.jpg',
+    18:'assets/bg/bg_wave18.jpg', 19:'assets/bg/bg_wave19.jpg',
+    20:'assets/bg/bg_wave20.jpg',
+  };
+  let   waveBgImg = null;   // active wave-specific bg (overrides theme bg)
+  let   waveBgAlpha = 0;
   let bgImgs  = {};
   let bgAlpha = 0;       // 0→1 crossfade-in
   let bgPrevImg = null;  // previous photo during transition
@@ -49,9 +57,11 @@ const Background = (() => {
   function _loadBgPhotos() {
     Object.entries(BG_PHOTOS).forEach(([key, src]) => {
       if (bgImgs[key]) return;
-      const img = new Image();
-      img.src = src;
-      bgImgs[key] = img;
+      const img = new Image(); img.src = src; bgImgs[key] = img;
+    });
+    Object.entries(BG_WAVES).forEach(([key, src]) => {
+      if (bgImgs['wave'+key]) return;
+      const img = new Image(); img.src = src; bgImgs['wave'+key] = img;
     });
   }
 
@@ -85,11 +95,28 @@ const Background = (() => {
     init() {
       stars   = Array.from({length: STAR_N}, () => mkStar(true));
       nebulae = Array.from({length: NEBULA_N}, (_, i) => mkNebula(i));
-      bgAlpha = 0; bgPrevImg = null; bgPrevAlpha = 0;
+      bgAlpha = 0; bgPrevImg = null; bgPrevAlpha = 0; waveBgImg = null; waveBgAlpha = 0;
       _loadBgPhotos();
     },
 
     setWarp(active) { targetMult = active ? 9 : 1; },
+
+    setWaveBg(waveNum) {
+      // Called on wave start for Act V waves (16-20)
+      const key = 'wave' + waveNum;
+      if (bgImgs[key]) {
+        bgPrevImg   = waveBgImg || bgImgs[theme] || null;
+        bgPrevAlpha = Math.max(bgAlpha, waveBgAlpha);
+        waveBgImg   = bgImgs[key];
+        waveBgAlpha = 0;
+      }
+    },
+
+    clearWaveBg() {
+      // Called when leaving Act V — restore act bg
+      waveBgImg   = null;
+      waveBgAlpha = 0;
+    },
 
     setTheme(t) {
       if (t !== targetTheme) {
@@ -115,6 +142,7 @@ const Background = (() => {
       // Crossfade bg photo in
       if (bgAlpha < 1) bgAlpha = Math.min(1, bgAlpha + dt * 0.55);
       if (bgPrevAlpha > 0) bgPrevAlpha = Math.max(0, bgPrevAlpha - dt * 0.55);
+      if (waveBgImg && waveBgAlpha < 1) waveBgAlpha = Math.min(1, waveBgAlpha + dt * 1.8);
 
       for (const s of stars) {
         s.dist += s.speed * warpMult * dt;
@@ -140,6 +168,13 @@ const Background = (() => {
       if (curImg && curImg.complete && curImg.naturalWidth && bgAlpha > 0) {
         ctx.save(); ctx.globalAlpha = bgAlpha;
         ctx.drawImage(curImg, 0, 0, CFG.W, CFG.H);
+        ctx.restore();
+      }
+
+      // ── wave-specific bg (Act V, overlays act bg) ────────────────
+      if (waveBgImg && waveBgImg.complete && waveBgAlpha > 0) {
+        ctx.save(); ctx.globalAlpha = waveBgAlpha;
+        ctx.drawImage(waveBgImg, 0, 0, CFG.W, CFG.H);
         ctx.restore();
       }
 

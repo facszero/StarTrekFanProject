@@ -59,6 +59,17 @@ const Story = (() => {
       mission:  'Multi-faction assault. Earth is the target. Last stand.',
       picard:   'We have made too many compromises already. No more.',
     },
+    {
+      num:      5,
+      title:    'ACT V',
+      name:     "LORE'S AWAKENING",
+      waves:    [16, 17, 18, 19, 20],
+      bg:       'void',   // handled by per-wave bg, this is fallback
+      quote:    '"I am not less perfect than you. I am more — without your weakness."',
+      attr:     '— Lore',
+      mission:  "Lore-8472 hybrid approaches Earth. Destroy him before he assimilates everything.",
+      picard:   'Data warned us about Lore. He was right. Full power to weapons.',
+    },
   ];
 
   // ── Wave → Picard tactical comments ─────────────────────────────
@@ -78,6 +89,11 @@ const Story = (() => {
    13:  'Cardassian warships. Their tactics are brutal.',
    14:  "The Dominion. Jem'Hadar do not take prisoners.",
    15:  'Species 8472. No known weapon has stopped them. Not yet.',
+   16:  "Lore. And he has brought the 8472 with him. This is unprecedented.",
+   17:  "He is testing us. Do not give him the satisfaction.",
+   18:  "Lore is using the Undine as weapons. He is more dangerous than we imagined.",
+   19:  "He is losing control. The 8472 cannot be fully commanded. Keep firing.",
+   20:  "Lore — STAND DOWN. We will not let you have this world.",
   };
 
   // ── State ────────────────────────────────────────────────────────
@@ -117,11 +133,17 @@ const Story = (() => {
         nextAct   = act;
         cinematic = true;
         cinTimer  = 0;
+        // Clear wave-specific bg when leaving Act V
+        if (currentAct && currentAct.num === 5) Background.clearWaveBg();
       } else {
         // Same act — show wave banner + Picard line
         const line = WAVE_LINES[waveNum];
         if (line) HUD.alert(line, 3500);
         Background.setTheme(act.bg);
+      }
+      // Act V: swap per-wave background (Lore progression)
+      if (act.num === 5) {
+        Background.setWaveBg(waveNum);
       }
     },
 

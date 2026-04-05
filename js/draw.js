@@ -374,6 +374,64 @@ const Draw = {
     g.addColorStop(0,'rgba(40,160,20,.15)'); g.addColorStop(1,'transparent');
     ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,60*scale,0,Math.PI*2); ctx.fill();
   },
+  // ── LORE's 8472 variants ────────────────────────────────────────
+
+  // Fast scout — uses small bioship sprites
+  loreScout(ctx, cx, cy, scale) {
+    const name = scale < 0.22 ? 'bio_sm_a' : scale < 0.45 ? 'bio_sm_b' : 'bio_sm_top';
+    if (Sprites.drawSp8472(ctx, name, cx, cy, scale * 1.5)) {
+      this._loreGlow(ctx, cx, cy, scale, '#44ffaa'); return;
+    }
+    // Canvas fallback
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#0a1a0a';
+    ctx.beginPath(); ctx.moveTo(0,-8); ctx.lineTo(-18,4); ctx.lineTo(0,10); ctx.lineTo(18,4); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#44ffaa'; ctx.lineWidth=1; ctx.stroke(); ctx.restore();
+  },
+
+  // Medium enforcer — side view
+  loreEnforcer(ctx, cx, cy, scale) {
+    const name = scale < 0.30 ? 'bio_sm_side' : scale < 0.55 ? 'bio_sm_sup' : 'bio_sm_top';
+    if (Sprites.drawSp8472(ctx, name, cx, cy, scale * 1.7)) {
+      this._loreGlow(ctx, cx, cy, scale, '#66ff22'); return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#0a1800';
+    ctx.beginPath(); ctx.moveTo(0,-14); ctx.lineTo(-30,8); ctx.lineTo(-20,20); ctx.lineTo(0,10); ctx.lineTo(20,20); ctx.lineTo(30,8); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#66ff22'; ctx.lineWidth=1; ctx.stroke(); ctx.restore();
+  },
+
+  // Massive titan — large bioship
+  loreTitan(ctx, cx, cy, scale, chargePct) {
+    const name = scale < 0.35 ? 'bio_large_frente' : scale < 0.65 ? 'bio_lg_side' : 'bio_lg_top';
+    if (Sprites.drawSp8472(ctx, name, cx, cy, scale * 0.75)) {
+      this._loreGlow(ctx, cx, cy, scale, '#88ff00');
+      // Focal beam charge indicator
+      if (chargePct > 0) {
+        const r = 60 * scale * chargePct;
+        ctx.save();
+        ctx.globalAlpha = chargePct * 0.7;
+        ctx.strokeStyle = '#aaff44'; ctx.lineWidth = 3 * chargePct;
+        ctx.shadowColor = '#88ff00'; ctx.shadowBlur = 20 * chargePct;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+      return;
+    }
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#051005';
+    ctx.beginPath(); ctx.moveTo(0,-30); ctx.lineTo(-60,12); ctx.lineTo(-48,38); ctx.lineTo(0,18); ctx.lineTo(48,38); ctx.lineTo(60,12); ctx.closePath();
+    ctx.fill(); ctx.strokeStyle='#88ff00'; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore();
+  },
+
+  _loreGlow(ctx, cx, cy, scale, col) {
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,70*scale);
+    g.addColorStop(0,`rgba(40,220,40,.12)`); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,70*scale,0,Math.PI*2); ctx.fill();
+  },
+
+
 
   // ══════════════════════════════════════════════════════════════
   //  ASTEROID — upgraded to use real sprite sheet rotation frames

@@ -178,6 +178,9 @@ class Enemy {
                 : type === 'jem_battle'   ? 140
                 : type === 'bioship'      ?  70
                 : type === 'bioship_lg'   ? 280
+                : type === 'lore_scout'   ?  45
+                : type === 'lore_enforcer'? 130
+                : type === 'lore_titan'   ? 450
                 : type === 'asteroid'     ? Math.ceil(size * 3)
                 : 30;
     this.maxHp  = this.hp;
@@ -195,6 +198,9 @@ class Enemy {
                 : type === 'jem_battle'   ?  380
                 : type === 'bioship'      ?  200
                 : type === 'bioship_lg'   ?  800
+                : type === 'lore_scout'   ?  150
+                : type === 'lore_enforcer'?  500
+                : type === 'lore_titan'   ? 1500
                 : type === 'asteroid'     ?   50
                 : 100;
 
@@ -207,6 +213,8 @@ class Enemy {
                        : type === 'asteroid' ? 0.5
                        : .75;
     this.firing    = false;
+    this.chargeTimer = 0;
+    this.chargePct   = 0;
     this.hitByNova = false;
     this.tick      = 0;
     this.rotation  = Math.random() * Math.PI * 2;
@@ -244,8 +252,18 @@ class Enemy {
     this.tick += dt;
     if (this.type === 'asteroid') this.rotation += this.rotSpeed * dt;
 
+    // Lore Titan: charge focal beam
+    if (this.type === 'lore_titan' && this.scale > 0.15 && !this.exploding) {
+      this.chargeTimer += dt;
+      const cycleTime = EnemyFire.getInterval('lore_titan', Enemies.currentWave);
+      this.chargePct = Math.min(1, this.chargeTimer / (cycleTime * 0.7));
+      if (this.chargeTimer >= cycleTime) {
+        EnemyFire.fire(this, Player.x, Player.y);
+        this.chargeTimer = 0; this.chargePct = 0;
+      }
+    }
     // Enemy fires when visible (scale > 0.12) and fire timer expires
-    if (this.canFire && this.scale > 0.12 && !this.exploding) {
+    if (this.canFire && this.type !== 'lore_titan' && this.scale > 0.12 && !this.exploding) {
       this.fireTimer -= dt;
       if (this.fireTimer <= 0) {
         EnemyFire.fire(this, Player.x, Player.y);
@@ -312,6 +330,9 @@ class Enemy {
     else if (this.type === 'jem_battle')  Draw.jemHadarBattle(ctx, this.sx, this.sy, this.scale);
     else if (this.type === 'bioship')     Draw.bioship      (ctx, this.sx, this.sy, this.scale, false);
     else if (this.type === 'bioship_lg')  Draw.bioship      (ctx, this.sx, this.sy, this.scale, true);
+    else if (this.type === 'lore_scout')   Draw.loreScout   (ctx, this.sx, this.sy, this.scale);
+    else if (this.type === 'lore_enforcer')Draw.loreEnforcer(ctx, this.sx, this.sy, this.scale);
+    else if (this.type === 'lore_titan')   Draw.loreTitan   (ctx, this.sx, this.sy, this.scale, this.chargePct||0);
     else if (this.type === 'asteroid') {
       const r = 38 * this.scale * (this.size || 1);
       Draw.asteroid(ctx, this.sx, this.sy, r, this.rotation, this.verts);
@@ -526,6 +547,72 @@ const Enemies = (() => {
         {type:'bioship',    wx: 120, wy:-20, speed:sp*1.35, delay:1200},
         {type:'bioship_lg', wx: -40, wy:  0, speed:sp*.75, delay:4500},
         {type:'bioship_lg', wx: 100, wy:-20, speed:sp*.70, delay:7000},
+      ],
+      // ── ACT V: LORE'S AWAKENING ─────────────────────────────────
+      // Wave 16 — First Contact
+      [
+        {type:'lore_scout',   wx:-420, wy: 30, speed:sp*2.2},
+        {type:'lore_scout',   wx: 400, wy:-20, speed:sp*2.2, delay:200},
+        {type:'lore_scout',   wx:-200, wy: 50, speed:sp*2.0, delay:700},
+        {type:'lore_scout',   wx: 220, wy:-40, speed:sp*2.0, delay:900},
+        {type:'bioship',      wx: -60, wy: 20, speed:sp*1.5, delay:2000},
+        {type:'lore_scout',   wx:-480, wy:-30, speed:sp*2.2, delay:2600},
+        {type:'bioship',      wx: 280, wy:-20, speed:sp*1.5, delay:3000},
+        {type:'lore_scout',   wx: 460, wy: 40, speed:sp*2.2, delay:3600},
+      ],
+      // Wave 17 — Organized Assault
+      [
+        {type:'lore_enforcer',wx:-320, wy: 20, speed:sp*1.4},
+        {type:'lore_enforcer',wx: 340, wy:-30, speed:sp*1.4, delay:400},
+        {type:'lore_scout',   wx:-160, wy: 50, speed:sp*2.0, delay:900},
+        {type:'lore_scout',   wx: 180, wy:-40, speed:sp*2.0, delay:1100},
+        {type:'bioship',      wx:-280, wy: 20, speed:sp*1.4, delay:2200},
+        {type:'bioship',      wx: 300, wy:-20, speed:sp*1.4, delay:2200},
+        {type:'lore_enforcer',wx:   0, wy:  0, speed:sp*1.3, delay:3800},
+        {type:'asteroid',     wx:-350, wy:-20, speed:800, size:0.9, delay:4800},
+        {type:'asteroid',     wx: 380, wy: 30, speed:750, size:1.0, delay:5100},
+      ],
+      // Wave 18 — Heavy Attack
+      [
+        {type:'lore_scout',   wx:-440, wy: 30, speed:sp*2.1},
+        {type:'lore_scout',   wx: 460, wy:-20, speed:sp*2.1, delay:250},
+        {type:'lore_enforcer',wx:-240, wy: 40, speed:sp*1.4, delay:900},
+        {type:'lore_enforcer',wx: 260, wy:-30, speed:sp*1.4, delay:1100},
+        {type:'bioship_lg',   wx:-100, wy: 10, speed:sp*0.9, delay:2800},
+        {type:'bioship_lg',   wx: 120, wy:-20, speed:sp*0.9, delay:2800},
+        {type:'asteroid',     wx:-320, wy: 50, speed:820, size:1.2, delay:4000},
+        {type:'lore_enforcer',wx: 360, wy:-40, speed:sp*1.5, delay:4500},
+        {type:'asteroid',     wx: 200, wy:-30, speed:780, size:0.8, delay:5300},
+        {type:'bioship_lg',   wx:  30, wy:  0, speed:sp*0.85,delay:6600},
+      ],
+      // Wave 19 — Titan Assault
+      [
+        {type:'lore_scout',   wx:-400, wy: 30, speed:sp*2.2},
+        {type:'lore_scout',   wx: 420, wy:-20, speed:sp*2.2, delay:200},
+        {type:'lore_enforcer',wx:-220, wy: 40, speed:sp*1.4, delay:1100},
+        {type:'lore_enforcer',wx: 240, wy:-30, speed:sp*1.4, delay:1300},
+        {type:'lore_titan',   wx:-120, wy: 10, speed:sp*0.65,delay:3000},
+        {type:'lore_enforcer',wx: 300, wy:-40, speed:sp*1.5, delay:3800},
+        {type:'lore_titan',   wx: 140, wy:-10, speed:sp*0.60,delay:5000},
+        {type:'lore_scout',   wx:-460, wy: 20, speed:sp*2.3, delay:5800},
+        {type:'lore_scout',   wx: 480, wy:-30, speed:sp*2.3, delay:6000},
+        {type:'asteroid',     wx:-200, wy: 50, speed:750, size:1.1, delay:6800},
+      ],
+      // Wave 20 — FINAL STAND
+      [
+        {type:'lore_scout',   wx:-440, wy: 30, speed:sp*2.3},
+        {type:'lore_scout',   wx: 460, wy:-20, speed:sp*2.3, delay:200},
+        {type:'lore_enforcer',wx:-280, wy: 40, speed:sp*1.5, delay:800},
+        {type:'lore_enforcer',wx: 300, wy:-30, speed:sp*1.5, delay:1000},
+        {type:'bioship_lg',   wx:-160, wy: 20, speed:sp*0.95,delay:2200},
+        {type:'bioship_lg',   wx: 180, wy:-20, speed:sp*0.95,delay:2200},
+        {type:'lore_titan',   wx: -50, wy:  0, speed:sp*0.55,delay:4000},
+        {type:'lore_scout',   wx:-420, wy: 50, speed:sp*2.4, delay:5200},
+        {type:'lore_scout',   wx: 440, wy:-40, speed:sp*2.4, delay:5400},
+        {type:'lore_enforcer',wx: 100, wy: 30, speed:sp*1.6, delay:6200},
+        {type:'lore_titan',   wx:-200, wy:-10, speed:sp*0.50,delay:7800},
+        {type:'asteroid',     wx: 300, wy:-30, speed:800, size:1.3, delay:9000},
+        {type:'lore_titan',   wx: 200, wy: 10, speed:sp*0.50,delay:11000},
       ],
     ];
     const template = waves[Math.min(n-1, waves.length-1)];

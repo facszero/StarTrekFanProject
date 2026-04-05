@@ -431,8 +431,11 @@ const EnemyFire = (() => {
     keldon:      { col:'#ff2200', interval:2.5 },
     jem_hadar:   { col:'#cc44ff', interval:3.2 },
     jem_battle:  { col:'#aa22ee', interval:2.2 },
-    bioship:     { col:'#88ff22', interval:3.0 },
-    bioship_lg:  { col:'#66ff00', interval:1.8 },
+    bioship:      { col:'#88ff22', interval:3.0 },
+    bioship_lg:   { col:'#66ff00', interval:1.8 },
+    lore_scout:   { col:'#44ffcc', interval:3.5 },
+    lore_enforcer:{ col:'#aaff22', interval:2.0 },
+    lore_titan:   { col:'#00ff66', interval:5.5 },  // slow but big focal beam
   };
 
   return {
@@ -448,12 +451,14 @@ const EnemyFire = (() => {
       const dy = playerY - enemy.sy + U.rnd(-20, 20);
       const dist = Math.hypot(dx, dy);
       const speed = U.rnd(280, 380);
+      const isTitan = enemy.type === 'lore_titan';
       bolts.push({
         x: enemy.sx, y: enemy.sy,
-        vx: (dx/dist)*speed, vy: (dy/dist)*speed,
+        vx: (dx/dist)*(isTitan?520:speed), vy: (dy/dist)*(isTitan?520:speed),
         col: cfg.col,
         life: 3.5, dead: false,
-        size: enemy.type === 'bioship_lg' ? 7 : enemy.type === 'borg_assimil' ? 6 : 4,
+        size: isTitan ? 12 : enemy.type === 'bioship_lg' ? 7 : enemy.type === 'borg_assimil' ? 6 : 4,
+        damage: isTitan ? 28 : 12,
       });
     },
 
@@ -475,8 +480,9 @@ const EnemyFire = (() => {
         b.y += b.vy * dt;
         b.life -= dt;
         // Hit player
-        if (Math.hypot(b.x - Player.x, b.y - Player.y) < 28) {
-          Player.takeHit(12);
+        const hitR = b.size > 10 ? 36 : 28;
+        if (Math.hypot(b.x - Player.x, b.y - Player.y) < hitR) {
+          Player.takeHit(b.damage || 12);
           b.dead = true;
           Particles.flash(b.x, b.y, 18);
           continue;
