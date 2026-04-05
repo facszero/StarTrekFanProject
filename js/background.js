@@ -101,6 +101,8 @@ const Background = (() => {
 
     setWarp(active) { targetMult = active ? 9 : 1; },
 
+    get currentTheme() { return theme; },
+
     setWaveBg(waveNum) {
       // Called on wave start for Act V waves (16-20)
       const key = 'wave' + waveNum;

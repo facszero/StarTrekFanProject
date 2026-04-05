@@ -51,6 +51,7 @@ const Game = (() => {
 
   // ── Unified tap handler ────────────────────────────────────────
   function handleTap(cx, cy) {
+    if (state === 'GAME_OVER' || state === 'VICTORY') { _returnToTitle(); return; }
     if (state !== 'PLAYING') { _startGame(); return; }    if (isNovaBtn(cx, cy)) { Nova.fire(Player.x, Player.y); return; }
 
     const target = findEnemyAt(cx, cy);
@@ -71,12 +72,14 @@ const Game = (() => {
     });
 
     canvas.addEventListener('click', e => {
+      TitleMusic.onUserGesture();
       const {cx, cy} = toCanvas(e.clientX, e.clientY);
       handleTap(cx, cy);
     });
 
     // ── Touch ───────────────────────────────────────────────────
     canvas.addEventListener('touchstart', e => {
+      TitleMusic.onUserGesture();
       e.preventDefault();
       refreshRect();
       if (!e.touches.length) return;
@@ -113,6 +116,7 @@ const Game = (() => {
 
     // ── Keyboard ────────────────────────────────────────────────
     document.addEventListener('keydown', e => {
+      TitleMusic.onUserGesture();
       keys[e.code] = true;
       if (e.code === 'Space') {
         e.preventDefault();
@@ -121,7 +125,7 @@ const Game = (() => {
       if (e.code === 'KeyN' || e.code === 'KeyF') {
         if (state === 'PLAYING') Nova.fire(Player.x, Player.y);
       }
-      if (e.code === 'Enter') _startGame();
+      if (e.code === 'Enter') { if(state==='GAME_OVER'||state==='VICTORY') _returnToTitle(); else _startGame(); }
       if (e.code === 'Escape') {
         if      (state === 'PLAYING') state = 'PAUSED';
         else if (state === 'PAUSED')  state = 'PLAYING';
@@ -149,27 +153,52 @@ const Game = (() => {
     Enemies.reset();
     Phasers.reset(); Projectiles.reset(); Particles.reset();
     Nova.reset(); EnemyFire.reset(); BorgAdaptation.reset();
+    BgExplosions.reset();
     Story.init();
     Story.onGameStart();
+    TitleMusic.fadeOut();
     HUD.init();
     Enemies.startWave(wave);
     HUD.alert('ENGAGE — WAVE 01', 2800);
     state = 'PLAYING';
   }
 
+  let _waveStartPending = false;
+
   function _nextWave() {
     wave++;
     if (wave > CFG.MAX_WAVES) { _triggerVictory(); return; }
-    Story.onWaveStart(wave);
-    Enemies.startWave(wave);
-    setTimeout(() =>
-      HUD.alert(`WAVE ${String(wave).padStart(2,'0')} — INCOMING`, 3000), 120);
+    // Show inter-wave pause (STAND BY banner, then start)
+    HUD.alert(`WAVE ${String(wave).padStart(2,'0')} — INCOMING`, 3000);
+    _waveStartPending = true;
+    setTimeout(() => {
+      if (_waveStartPending) {
+        _waveStartPending = false;
+        Story.onWaveStart(wave);
+        Enemies.startWave(wave);
+      }
+    }, CFG.WAVE_PAUSE * 1000);
   }
 
   function _triggerVictory() {
     state = 'VICTORY';
     HUD.alert('MISSION COMPLETE — ENTERPRISE RETURNS HOME', 8000);
     Background.setTheme('blue');
+    TitleMusic.fadeOut();
+  }
+
+  function _returnToTitle() {
+    // Full reset → back to title screen (as if first load)
+    _waveStartPending = false;
+    wave = 1; score = 0;
+    Player.reset(); Enemies.reset(); Phasers.reset();
+    Projectiles.reset(); Particles.reset(); Nova.reset();
+    EnemyFire.reset(); BorgAdaptation.reset();
+    Story.init(); HUD.init();
+    Background.setTheme('blue'); Background.clearWaveBg();
+    BgExplosions.reset();
+    state = 'TITLE';
+    TitleMusic.playTitle();
   }
 
   // ── Main loop ───────────────────────────────────────────────────
@@ -187,6 +216,7 @@ const Game = (() => {
 
     if (state !== 'PLAYING') return;
     if (Story.shouldPauseGame()) return;   // freeze gameplay during act transition
+    BgExplosions.update(dt);
     Player.update(dt, keys);
     Phasers.update(dt, Player.x, Player.y);
     BorgAdaptation.update(dt);
@@ -255,6 +285,14 @@ const Game = (() => {
       ctx.fillStyle=CFG.C.DIM;  ctx.fillText(k, col1, cy2+i*18);
       ctx.fillStyle=CFG.C.TEXT; ctx.fillText(v, col2, cy2+i*18);
     });
+    // Audio blocked indicator (only after first interaction)
+    if (typeof TitleMusic !== 'undefined' && TitleMusic.audioBlocked) {
+      ctx.fillStyle = U.rgba(CFG.C.DIM, 0.6);
+      ctx.font = '13px Arial,sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('🔇 tap to enable audio', CFG.W - 10, CFG.H - 10);
+      ctx.textAlign = 'left';
+    }
     ctx.textAlign='left';
   }
 
@@ -286,6 +324,7 @@ const Game = (() => {
   function render() {
     ctx.clearRect(0,0,CFG.W,CFG.H);
     Background.render(ctx);
+    BgExplosions.render(ctx);
     if (state==='TITLE') { renderTitle(); return; }
     Enemies.render(ctx);
     EnemyFire.render(ctx);
@@ -344,6 +383,9 @@ const Game = (() => {
       Background.init(); Player.init(); Enemies.init();
       Phasers.init(); Projectiles.init(); Particles.init(); Nova.init();
       EnemyFire.init(); BorgAdaptation.init(); Story.init(); HUD.init();
+      BgExplosions.init();
+      TitleMusic.init();
+      TitleMusic.playTitle();
       requestAnimationFrame(ts => { lastTs=ts; requestAnimationFrame(loop); });
     }
   };
