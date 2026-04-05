@@ -406,3 +406,113 @@ const BorgAdaptation = (() => {
     }
   };
 })();
+
+// ═══════════════════════════════════════════════════════════════════
+//  ENEMY FIRE — enemy projectiles that the player must dodge
+//  ~50% of enemy types fire back. Slow-moving colored bolts aimed
+//  at the player's current position when fired.
+//  Bolt colors: orange=Klingon, green=Borg, purple=Dominion,
+//               yellow=Romulan, red=Cardassian, lime=8472
+// ═══════════════════════════════════════════════════════════════════
+const EnemyFire = (() => {
+  let bolts = [];
+
+  // Which types fire, their color and base interval (seconds)
+  const FIRE_CONFIG = {
+    bop:         { col:'#ff8822', interval:4.5 },
+    borg:        { col:'#22ff88', interval:3.5 },
+    borg_sphere: { col:'#44ffaa', interval:4.0 },
+    borg_assimil:{ col:'#00ff44', interval:2.5 },
+    valdore:     { col:'#ffff44', interval:4.0 },
+    dderidex:    { col:'#ffff22', interval:3.0 },
+    vorcha:      { col:'#ff6600', interval:3.8 },
+    neghvar:     { col:'#ff4400', interval:2.8 },
+    galor:       { col:'#ff3300', interval:3.5 },
+    keldon:      { col:'#ff2200', interval:2.5 },
+    jem_hadar:   { col:'#cc44ff', interval:3.2 },
+    jem_battle:  { col:'#aa22ee', interval:2.2 },
+    bioship:     { col:'#88ff22', interval:3.0 },
+    bioship_lg:  { col:'#66ff00', interval:1.8 },
+  };
+
+  return {
+    init()  { bolts = []; },
+    reset() { bolts = []; },
+
+    // Called by Enemy.update when fire timer elapses
+    fire(enemy, playerX, playerY) {
+      const cfg = FIRE_CONFIG[enemy.type];
+      if (!cfg) return;
+      // Aim at player with slight spread
+      const dx = playerX - enemy.sx + U.rnd(-40, 40);
+      const dy = playerY - enemy.sy + U.rnd(-20, 20);
+      const dist = Math.hypot(dx, dy);
+      const speed = U.rnd(280, 380);
+      bolts.push({
+        x: enemy.sx, y: enemy.sy,
+        vx: (dx/dist)*speed, vy: (dy/dist)*speed,
+        col: cfg.col,
+        life: 3.5, dead: false,
+        size: enemy.type === 'bioship_lg' ? 7 : enemy.type === 'borg_assimil' ? 6 : 4,
+      });
+    },
+
+    // Returns base fire interval for an enemy type, scaled by wave difficulty
+    getInterval(type, wave) {
+      const cfg = FIRE_CONFIG[type];
+      if (!cfg) return Infinity;
+      // Gets faster each act (~15% per 5 waves)
+      const scale = Math.max(0.45, 1 - (wave-1) * 0.04);
+      return cfg.interval * scale;
+    },
+
+    hasFire(type) { return !!FIRE_CONFIG[type]; },
+
+    update(dt) {
+      for (const b of bolts) {
+        if (b.dead) continue;
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.life -= dt;
+        // Hit player
+        if (Math.hypot(b.x - Player.x, b.y - Player.y) < 28) {
+          Player.takeHit(12);
+          b.dead = true;
+          Particles.flash(b.x, b.y, 18);
+          continue;
+        }
+        // Out of bounds or expired
+        if (b.life <= 0 || b.x < 120 || b.x > CFG.W-120 || b.y < 80 || b.y > CFG.H-60)
+          b.dead = true;
+      }
+      bolts = bolts.filter(b => !b.dead);
+    },
+
+    render(ctx) {
+      for (const b of bolts) {
+        if (b.dead) continue;
+        // Elongated bolt in direction of travel
+        const angle = Math.atan2(b.vy, b.vx);
+        const len = b.size * 4;
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.rotate(angle);
+        // Outer glow
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = b.col;
+        ctx.shadowColor = b.col; ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, len, b.size*1.2, 0, 0, Math.PI*2);
+        ctx.fill();
+        // Bright core
+        ctx.globalAlpha = 0.95;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, len*.6, b.size*.55, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+    },
+  };
+})();

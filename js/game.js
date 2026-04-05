@@ -147,11 +147,8 @@ const Game = (() => {
     score = 0; wave = 1;
     Player.reset();
     Enemies.reset();
-    Phasers.reset();
-    Projectiles.reset();
-    Particles.reset();
-    Nova.reset();
-    BorgAdaptation.reset();
+    Phasers.reset(); Projectiles.reset(); Particles.reset();
+    Nova.reset(); EnemyFire.reset(); BorgAdaptation.reset();
     Story.init();
     Story.onGameStart();
     HUD.init();
@@ -194,6 +191,7 @@ const Game = (() => {
     Phasers.update(dt, Player.x, Player.y);
     BorgAdaptation.update(dt);
     Enemies.update(dt);
+    EnemyFire.update(dt);
     Projectiles.update(dt);
     Particles.update(dt);
     Nova.update(dt);
@@ -290,6 +288,7 @@ const Game = (() => {
     Background.render(ctx);
     if (state==='TITLE') { renderTitle(); return; }
     Enemies.render(ctx);
+    EnemyFire.render(ctx);
     Phasers.render(ctx);
     Projectiles.render(ctx);
     Nova.render(ctx);
@@ -344,7 +343,7 @@ const Game = (() => {
       refreshRect();
       Background.init(); Player.init(); Enemies.init();
       Phasers.init(); Projectiles.init(); Particles.init(); Nova.init();
-      BorgAdaptation.init(); Story.init(); HUD.init();
+      EnemyFire.init(); BorgAdaptation.init(); Story.init(); HUD.init();
       requestAnimationFrame(ts => { lastTs=ts; requestAnimationFrame(loop); });
     }
   };

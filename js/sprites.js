@@ -548,3 +548,54 @@ Sprites.drawUnicomplex = function(ctx, name, cx, cy, scale, rot) {
     Sprites.sheets.unicomplex = img;
   };
 })();
+
+// ════════════════════════════════════════════════════════════════════
+//  BACKGROUND SPRITES — per-act scenery elements
+// ════════════════════════════════════════════════════════════════════
+Sprites.BG = {
+  // earth_sheet.png (1408x768) — rotation frames ~134px each
+  earth_rot: [
+    [ 33,104,134,133], [205,104,135,133], [380,104,135,133], [554,104,136,133],
+    [768,105,112,111], [933,104,114,112], [1100,104,112,112], [1256,104,112,112],
+    [ 33,256,136,135], [204,256,137,135], [379,256,137,135], [552,256,138,135],
+    [ 32,412,138,136], [204,411,138,137], [379,412,138,136], [552,412,139,136],
+  ],
+  earth_large: [769,558,160,158],  // bigger variant
+
+  // k7_sheet.png (1408x768) — K-7 space station
+  k7_side:   [950,104,176,165],    // side view, clear silhouette
+  k7_front:  [422,104,109,195],    // front view
+
+  // spacedock_sheet.png (1408x768) — Earth Spacedock
+  spacedock_front: [ 33,107,281,285],   // main front view
+  spacedock_top:   [ 12,432,316,258],   // top-down view
+
+  // ds9_sheet.png (1264x843) — DS9 station
+  ds9_34:    [853,604,176,145],    // 3/4 perspective (smaller, good for bg)
+  ds9_large: [  7, 67,1245,473],   // full panel (use cropped portion)
+};
+
+Sprites.drawBgElement = function(ctx, sheet, rect, cx, cy, scale, alpha) {
+  const img = Sprites.sheets[sheet];
+  if (!img || !img.complete || !img.naturalWidth) return false;
+  const r = rect;
+  const dw = r[2]*scale, dh = r[3]*scale;
+  ctx.save();
+  ctx.globalAlpha = alpha || 1;
+  ctx.drawImage(img, r[0],r[1],r[2],r[3], cx-dw/2, cy-dh/2, dw, dh);
+  ctx.restore();
+  return true;
+};
+
+// Load background sprite sheets
+(function() {
+  const mk = (key, file) => {
+    const img = new Image();
+    img.src = 'assets/sprites/' + file;
+    Sprites.sheets[key] = img;
+  };
+  mk('earth',     'earth_sheet.png');
+  mk('k7',        'k7_sheet.png');
+  mk('spacedock', 'spacedock_sheet.png');
+  // ds9 already loaded; re-confirm
+})();

@@ -38,6 +38,26 @@ const Background = (() => {
     },
   };
 
+  // ── Per-act scenery (stations, planets) ───────────────────────
+  let earthFrame = 0, earthTimer = 0;
+  const SCENERY = {
+    blue: [  // Act I: Earth + K-7 station
+      { sheet:'earth', r:()=>Sprites.BG&&Sprites.BG.earth_large, x:1080,y:310, s:0.90, a:0.62 },
+      { sheet:'k7',    r:()=>Sprites.BG&&Sprites.BG.k7_side,     x: 185,y:385, s:0.48, a:0.38 },
+    ],
+    green: [ // Act II: K-7 under siege
+      { sheet:'k7', r:()=>Sprites.BG&&Sprites.BG.k7_front, x:210,y:355, s:0.68, a:0.50 },
+      { sheet:'k7', r:()=>Sprites.BG&&Sprites.BG.k7_side,  x:1055,y:420,s:0.42, a:0.32 },
+    ],
+    borg: [  // Act III: DS9 being assimilated
+      { sheet:'ds9', r:()=>Sprites.BG&&Sprites.BG.ds9_34, x:200,y:375, s:0.85, a:0.45 },
+    ],
+    deep: [  // Act IV: Earth Spacedock + Earth
+      { sheet:'earth',     r:()=>Sprites.BG&&Sprites.BG.earth_large,      x:1005,y:340, s:0.75, a:0.55 },
+      { sheet:'spacedock', r:()=>Sprites.BG&&Sprites.BG.spacedock_front,   x: 195,y:370, s:0.58, a:0.48 },
+    ],
+  };
+
   // ── Star ──────────────────────────────────────────────────────────────
   function mkStar(scattered) {
     const s = {
@@ -82,6 +102,9 @@ const Background = (() => {
     update(dt) {
       tick += dt;
       warpMult = U.lerp(warpMult, targetMult, dt * 2.5);
+      // Earth rotation animation (one frame every 3s)
+      earthTimer += dt;
+      if (earthTimer > 3.0) { earthTimer = 0; earthFrame++; }
 
       // Blend to new theme
       if (themeBlend < 1) {
@@ -121,6 +144,22 @@ const Background = (() => {
         ctx.fill();
       }
       ctx.restore();
+
+      // ── scenery (stations, planets) — drawn behind stars ──────
+      const defs = SCENERY[theme] || SCENERY.blue;
+      for (const el of defs) {
+        const rect = el.r && el.r();
+        if (!rect) continue;
+        // Subtle parallax: offset slightly based on tick
+        const px = el.x + Math.sin(tick * 0.04) * 3;
+        const py = el.y + Math.cos(tick * 0.03) * 2;
+        // Earth rotates through frames
+        let r = rect;
+        if (el.sheet === 'earth' && Sprites.BG && Sprites.BG.earth_rot) {
+          r = Sprites.BG.earth_rot[earthFrame % Sprites.BG.earth_rot.length] || rect;
+        }
+        Sprites.drawBgElement(ctx, el.sheet, r, px, py, el.s, el.a);
+      }
 
       // ── star tunnel ──
       for (const s of stars) {

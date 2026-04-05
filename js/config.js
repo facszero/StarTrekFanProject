@@ -53,8 +53,8 @@ const CFG = {
   LIVES:            3,
 
   // ── Enemies ─────────────────────────────────────────────────────────────
-  BOP_SPEED_BASE:   600,   // z-units/sec wave 1 → increases 65/wave up to ~1510 at wave 15
-  BORG_SPEED_BASE:  400,
+  BOP_SPEED_BASE:   420,   // slower → longer waves; speed = 420+(n-1)*55
+  BORG_SPEED_BASE:  280,
 
   // ── Palette ─────────────────────────────────────────────────────────────
   C: {

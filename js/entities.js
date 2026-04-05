@@ -209,8 +209,11 @@ class Enemy {
     this.firing    = false;
     this.hitByNova = false;
     this.tick      = 0;
-    this.rotation  = Math.random() * Math.PI * 2;  // for asteroids
+    this.rotation  = Math.random() * Math.PI * 2;
     this.rotSpeed  = type === 'asteroid' ? U.rnd(-1.8, 1.8) : 0;
+    // Enemy fire — only for non-asteroid types that have fire config
+    this.canFire   = EnemyFire.hasFire(type);
+    this.fireTimer = this.canFire ? U.rnd(1.5, 4.0) : Infinity; // stagger initial shots
 
     // Asteroid: generate irregular polygon vertices once
     if (type === 'asteroid') {
@@ -240,6 +243,15 @@ class Enemy {
   update(dt) {
     this.tick += dt;
     if (this.type === 'asteroid') this.rotation += this.rotSpeed * dt;
+
+    // Enemy fires when visible (scale > 0.12) and fire timer expires
+    if (this.canFire && this.scale > 0.12 && !this.exploding) {
+      this.fireTimer -= dt;
+      if (this.fireTimer <= 0) {
+        EnemyFire.fire(this, Player.x, Player.y);
+        this.fireTimer = EnemyFire.getInterval(this.type, Enemies.currentWave || 1);
+      }
+    }
 
     if (this.exploding) {
       this.exTimer += dt;
@@ -331,6 +343,7 @@ class Enemy {
 // ═══════════════════════════════════════════════════════════════════
 const Enemies = (() => {
   let _list = [], queue = [], waveActive = false;
+  let _currentWave = 1;
   let _astTimer = 0;    // countdown to next random asteroid
   let _astBase  = 12;   // base interval seconds between random asteroids
 
@@ -339,8 +352,8 @@ const Enemies = (() => {
   }
 
   function buildWave(n) {
-    const sp  = CFG.BOP_SPEED_BASE + (n-1)*65;
-    const bsp = CFG.BORG_SPEED_BASE + n*30;
+    const sp  = CFG.BOP_SPEED_BASE + (n-1)*55;   // 420→1190 across 15 waves
+    const bsp = CFG.BORG_SPEED_BASE + n*25;
 
     // Helper: random position enemy
     const rnd = (type, opts={}) => ({
@@ -353,58 +366,67 @@ const Enemies = (() => {
     });
 
     const waves = [
-      // Wave 1 — 3 BOPs, spread entry
+      // Wave 1 — 5 BOPs: center first, then flanks, then stragglers
       [
-        {type:'bop', wx:  0,   wy:  0,  speed:sp},
-        {type:'bop', wx:-280,  wy: 30,  speed:sp,   delay:900},
-        {type:'bop', wx: 320,  wy:-20,  speed:sp,   delay:900},
+        {type:'bop', wx:   0, wy:  0, speed:sp},
+        {type:'bop', wx:-280, wy: 30, speed:sp,    delay:1200},
+        {type:'bop', wx: 320, wy:-20, speed:sp,    delay:1200},
+        {type:'bop', wx:-120, wy:-30, speed:sp*.9, delay:3000},
+        {type:'bop', wx: 160, wy: 40, speed:sp*.9, delay:4200},
       ],
-      // Wave 2 — V formation, wider
+      // Wave 2 — V formation, 6 ships, wider spread
       [
-        {type:'bop', wx:   0,  wy:  0,  speed:sp*1.1},
-        {type:'bop', wx:-240,  wy: 40,  speed:sp*1.1, delay:600},
-        {type:'bop', wx: 260,  wy: 40,  speed:sp*1.1, delay:600},
-        {type:'bop', wx:-440,  wy: 80,  speed:sp*1.1, delay:1300},
-        {type:'bop', wx: 460,  wy: 80,  speed:sp*1.1, delay:1300},
+        {type:'bop', wx:   0, wy:  0, speed:sp*1.05},
+        {type:'bop', wx:-240, wy: 40, speed:sp*1.05, delay:700},
+        {type:'bop', wx: 260, wy: 40, speed:sp*1.05, delay:700},
+        {type:'bop', wx:-440, wy: 80, speed:sp*1.1,  delay:1800},
+        {type:'bop', wx: 460, wy: 80, speed:sp*1.1,  delay:1800},
+        {type:'bop', wx:  60, wy:-40, speed:sp*1.15, delay:3400},
       ],
-      // Wave 3 — flanking pincer from both sides
+      // Wave 3 — flanking pincer + back-row reinforcements
       [
-        {type:'bop', wx:-500,  wy: 20,  speed:sp*1.2, driftX: 3.0},
-        {type:'bop', wx: 500,  wy: 20,  speed:sp*1.2, driftX:-3.0},
-        {type:'bop', wx:-200,  wy:-40,  speed:sp*1.25, delay:1400},
-        {type:'bop', wx: 220,  wy: 60,  speed:sp*1.25, delay:1800},
-        {type:'bop', wx:  80,  wy:-30,  speed:sp*1.3,  delay:2600},
-        {type:'bop', wx:-360,  wy: 10,  speed:sp*1.4,  delay:3500},
+        {type:'bop', wx:-500, wy: 20, speed:sp*1.15, driftX: 2.5},
+        {type:'bop', wx: 500, wy: 20, speed:sp*1.15, driftX:-2.5},
+        {type:'bop', wx:-200, wy:-40, speed:sp*1.2,  delay:1600},
+        {type:'bop', wx: 220, wy: 60, speed:sp*1.2,  delay:2000},
+        {type:'bop', wx:  80, wy:-30, speed:sp*1.25, delay:3200},
+        {type:'bop', wx:-360, wy: 10, speed:sp*1.3,  delay:4200},
+        {type:'bop', wx: 380, wy:-50, speed:sp*1.3,  delay:5500},
       ],
-      // Wave 4 — first Borg + escort, varied Y
+      // Wave 4 — first Borg cube + heavy BOP escort
       [
-        {type:'bop',  wx:-350, wy: 50,  speed:sp*1.1},
-        {type:'bop',  wx: 380, wy:-30,  speed:sp*1.1,  delay:400},
-        {type:'borg', wx:  30, wy:-20,  speed:bsp,      delay:2800},
-        {type:'bop',  wx:-180, wy: 70,  speed:sp*1.2,   delay:4000},
-        {type:'bop',  wx: 200, wy:-50,  speed:sp*1.2,   delay:4000},
-        {type:'bop',  wx: -60, wy: 30,  speed:sp*1.35,  delay:5200},
+        {type:'bop',  wx:-350, wy: 50, speed:sp*1.1},
+        {type:'bop',  wx: 380, wy:-30, speed:sp*1.1,  delay:500},
+        {type:'bop',  wx:-100, wy: 30, speed:sp*1.15, delay:1400},
+        {type:'borg', wx:  30, wy:-20, speed:bsp,      delay:3200},
+        {type:'bop',  wx:-180, wy: 70, speed:sp*1.2,   delay:4500},
+        {type:'bop',  wx: 200, wy:-50, speed:sp*1.2,   delay:4500},
+        {type:'bop',  wx: -60, wy: 30, speed:sp*1.3,   delay:6000},
+        {type:'borg', wx:-200, wy:-20, speed:bsp*.85,  delay:7500},
       ],
-      // Wave 5 — Borg scout swarms + spheres
+      // Wave 5 — Borg scouts + spheres, multi-wave assault
       [
-        {type:'borg_scout', wx:-350, wy: 40,  speed:sp*1.7},
-        {type:'borg_scout', wx: 380, wy:-20,  speed:sp*1.7,  delay:250},
-        {type:'borg_scout', wx: -80, wy: 60,  speed:sp*1.65, delay:700},
-        {type:'borg_scout', wx: 120, wy:-50,  speed:sp*1.65, delay:950},
-        {type:'borg_sphere',wx:-220, wy: 20,  speed:bsp*1.1, delay:2000},
-        {type:'borg_sphere',wx: 250, wy:-30,  speed:bsp*1.1, delay:2000},
-        {type:'borg_scout', wx:-480, wy: 80,  speed:sp*1.8,  delay:3600},
-        {type:'borg_scout', wx: 460, wy:-60,  speed:sp*1.8,  delay:3600},
+        {type:'borg_scout', wx:-350, wy: 40, speed:sp*1.6},
+        {type:'borg_scout', wx: 380, wy:-20, speed:sp*1.6,  delay:300},
+        {type:'borg_scout', wx: -80, wy: 60, speed:sp*1.55, delay:900},
+        {type:'borg_scout', wx: 120, wy:-50, speed:sp*1.55, delay:1200},
+        {type:'borg_sphere',wx:-220, wy: 20, speed:bsp*1.1, delay:2500},
+        {type:'borg_sphere',wx: 250, wy:-30, speed:bsp*1.1, delay:2500},
+        {type:'borg_scout', wx:-480, wy: 80, speed:sp*1.7,  delay:4200},
+        {type:'borg_scout', wx: 460, wy:-60, speed:sp*1.7,  delay:4200},
+        {type:'borg_sphere',wx:  20, wy:  0, speed:bsp,     delay:6000},
       ],
-      // Wave 6 — Assimilation ship boss + mixed escort
+      // Wave 6 — Assimilation ship + full Borg screen
       [
-        {type:'borg_scout',  wx:-420, wy: 60,  speed:sp*1.5},
-        {type:'borg_scout',  wx: 440, wy:-40,  speed:sp*1.5,  delay:350},
-        {type:'borg_sphere', wx:-260, wy: 30,  speed:bsp*1.1, delay:1600},
-        {type:'borg_sphere', wx: 280, wy:-60,  speed:bsp*1.1, delay:1600},
-        {type:'borg_assimil',wx: -20, wy:  0,  speed:bsp*.7,  delay:4200},
-        {type:'borg_scout',  wx:-160, wy: 80,  speed:sp*1.6,  delay:5400},
-        {type:'borg_scout',  wx: 180, wy:-30,  speed:sp*1.6,  delay:5400},
+        {type:'borg_scout',  wx:-420, wy: 60, speed:sp*1.45},
+        {type:'borg_scout',  wx: 440, wy:-40, speed:sp*1.45, delay:400},
+        {type:'borg_sphere', wx:-260, wy: 30, speed:bsp*1.1, delay:1800},
+        {type:'borg_sphere', wx: 280, wy:-60, speed:bsp*1.1, delay:1800},
+        {type:'borg_scout',  wx: -80, wy: 50, speed:sp*1.5,  delay:3200},
+        {type:'borg_scout',  wx: 100, wy:-30, speed:sp*1.5,  delay:3200},
+        {type:'borg_assimil',wx: -20, wy:  0, speed:bsp*.65, delay:5000},
+        {type:'borg_scout',  wx:-160, wy: 80, speed:sp*1.55, delay:6500},
+        {type:'borg_scout',  wx: 180, wy:-30, speed:sp*1.55, delay:6500},
       ],
       // Wave 7 — Romulan patrol: Valdore + D'deridex
       [
@@ -511,9 +533,10 @@ const Enemies = (() => {
   }
 
   return {
-    get list() { return _list; },
-    init()  { _list=[]; queue=[]; waveActive=false; _astTimer=_newAstInterval(); },
-    reset() { _list=[]; queue=[]; waveActive=false; _astTimer=_newAstInterval(); },
+    get list()         { return _list; },
+    get currentWave()  { return _currentWave; },
+    init()  { _list=[]; queue=[]; waveActive=false; _astTimer=_newAstInterval(); _currentWave=1; },
+    reset() { _list=[]; queue=[]; waveActive=false; _astTimer=_newAstInterval(); _currentWave=1; },
 
     isWaveClear() {
       return waveActive && queue.length===0
@@ -521,7 +544,7 @@ const Enemies = (() => {
     },
 
     startWave(n) {
-      waveActive=true; _list=[];
+      waveActive=true; _list=[]; _currentWave=n;
       queue = buildWave(n).map(e=>({...e}));
     },
 
