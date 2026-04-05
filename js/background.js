@@ -38,25 +38,22 @@ const Background = (() => {
     },
   };
 
-  // ── Per-act scenery (stations, planets) ───────────────────────
-  let earthFrame = 0, earthTimer = 0;
-  const SCENERY = {
-    blue: [  // Act I: Earth + K-7 station
-      { sheet:'earth', r:()=>Sprites.BG&&Sprites.BG.earth_large, x:1080,y:310, s:0.90, a:0.62 },
-      { sheet:'k7',    r:()=>Sprites.BG&&Sprites.BG.k7_side,     x: 185,y:385, s:0.48, a:0.38 },
-    ],
-    green: [ // Act II: K-7 under siege
-      { sheet:'k7', r:()=>Sprites.BG&&Sprites.BG.k7_front, x:210,y:355, s:0.68, a:0.50 },
-      { sheet:'k7', r:()=>Sprites.BG&&Sprites.BG.k7_side,  x:1055,y:420,s:0.42, a:0.32 },
-    ],
-    borg: [  // Act III: DS9 being assimilated
-      { sheet:'ds9', r:()=>Sprites.BG&&Sprites.BG.ds9_34, x:200,y:375, s:0.85, a:0.45 },
-    ],
-    deep: [  // Act IV: Earth Spacedock + Earth
-      { sheet:'earth',     r:()=>Sprites.BG&&Sprites.BG.earth_large,      x:1005,y:340, s:0.75, a:0.55 },
-      { sheet:'spacedock', r:()=>Sprites.BG&&Sprites.BG.spacedock_front,   x: 195,y:370, s:0.58, a:0.48 },
-    ],
-  };
+  // ── Photo backgrounds ─────────────────────────────────────────
+  const BG_PHOTOS = { blue:'assets/bg/bg_act1.jpg', green:'assets/bg/bg_act2.jpg',
+                      borg:'assets/bg/bg_act3.jpg', deep:'assets/bg/bg_act4.jpg' };
+  let bgImgs  = {};
+  let bgAlpha = 0;       // 0→1 crossfade-in
+  let bgPrevImg = null;  // previous photo during transition
+  let bgPrevAlpha = 0;
+
+  function _loadBgPhotos() {
+    Object.entries(BG_PHOTOS).forEach(([key, src]) => {
+      if (bgImgs[key]) return;
+      const img = new Image();
+      img.src = src;
+      bgImgs[key] = img;
+    });
+  }
 
   // ── Star ──────────────────────────────────────────────────────────────
   function mkStar(scattered) {
@@ -88,12 +85,18 @@ const Background = (() => {
     init() {
       stars   = Array.from({length: STAR_N}, () => mkStar(true));
       nebulae = Array.from({length: NEBULA_N}, (_, i) => mkNebula(i));
+      bgAlpha = 0; bgPrevImg = null; bgPrevAlpha = 0;
+      _loadBgPhotos();
     },
 
     setWarp(active) { targetMult = active ? 9 : 1; },
 
     setTheme(t) {
       if (t !== targetTheme) {
+        // Save current as previous for crossfade
+        bgPrevImg   = bgImgs[theme] || null;
+        bgPrevAlpha = bgAlpha;
+        bgAlpha     = 0;
         targetTheme = t;
         themeBlend  = 0;
       }
@@ -102,15 +105,16 @@ const Background = (() => {
     update(dt) {
       tick += dt;
       warpMult = U.lerp(warpMult, targetMult, dt * 2.5);
-      // Earth rotation animation (one frame every 3s)
-      earthTimer += dt;
-      if (earthTimer > 3.0) { earthTimer = 0; earthFrame++; }
+
 
       // Blend to new theme
       if (themeBlend < 1) {
         themeBlend = Math.min(1, themeBlend + dt * 0.8);
         if (themeBlend >= 1) theme = targetTheme;
       }
+      // Crossfade bg photo in
+      if (bgAlpha < 1) bgAlpha = Math.min(1, bgAlpha + dt * 0.55);
+      if (bgPrevAlpha > 0) bgPrevAlpha = Math.max(0, bgPrevAlpha - dt * 0.55);
 
       for (const s of stars) {
         s.dist += s.speed * warpMult * dt;
@@ -121,45 +125,29 @@ const Background = (() => {
     render(ctx) {
       const cx = CFG.W / 2, cy = CFG.HORIZON_Y;
 
-      // ── deep space gradient (theme-aware) ──
-      const th = THEMES[theme] || THEMES.blue;
-      const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 720);
-      bg.addColorStop(0, th.bg1);
-      bg.addColorStop(.55, th.bg2);
-      bg.addColorStop(1,  th.bg3);
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, CFG.W, CFG.H);
+      // ── photo background ──────────────────────────────────────
+      // Dark base first
+      ctx.fillStyle = '#020408'; ctx.fillRect(0, 0, CFG.W, CFG.H);
 
-      // ── nebulae ──
-      ctx.save();
-      for (const n of nebulae) {
-        const pulse = .03 + Math.sin(tick * .25 + n.phase) * .012;
-        ctx.globalAlpha = pulse;
-        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
-        g.addColorStop(0, n.c2);
-        g.addColorStop(1, 'transparent');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
-        ctx.fill();
+      // Previous photo fading out
+      if (bgPrevImg && bgPrevImg.complete && bgPrevAlpha > 0) {
+        ctx.save(); ctx.globalAlpha = bgPrevAlpha;
+        ctx.drawImage(bgPrevImg, 0, 0, CFG.W, CFG.H);
+        ctx.restore();
       }
-      ctx.restore();
+      // Current photo fading in
+      const curImg = bgImgs[theme] || bgImgs.blue;
+      if (curImg && curImg.complete && curImg.naturalWidth && bgAlpha > 0) {
+        ctx.save(); ctx.globalAlpha = bgAlpha;
+        ctx.drawImage(curImg, 0, 0, CFG.W, CFG.H);
+        ctx.restore();
+      }
 
-      // ── scenery (stations, planets) — drawn behind stars ──────
-      const defs = SCENERY[theme] || SCENERY.blue;
-      for (const el of defs) {
-        const rect = el.r && el.r();
-        if (!rect) continue;
-        // Subtle parallax: offset slightly based on tick
-        const px = el.x + Math.sin(tick * 0.04) * 3;
-        const py = el.y + Math.cos(tick * 0.03) * 2;
-        // Earth rotates through frames
-        let r = rect;
-        if (el.sheet === 'earth' && Sprites.BG && Sprites.BG.earth_rot) {
-          r = Sprites.BG.earth_rot[earthFrame % Sprites.BG.earth_rot.length] || rect;
-        }
-        Sprites.drawBgElement(ctx, el.sheet, r, px, py, el.s, el.a);
-      }
+      // ── subtle dark vignette to help readability ───────────────
+      const vig = ctx.createRadialGradient(cx, CFG.H/2, 120, cx, CFG.H/2, 750);
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(0,0,0,0.45)');
+      ctx.fillStyle = vig; ctx.fillRect(0,0,CFG.W,CFG.H);
 
       // ── star tunnel ──
       for (const s of stars) {

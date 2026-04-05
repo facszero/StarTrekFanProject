@@ -1,4 +1,4 @@
-const CACHE = 'stff-v4';
+const CACHE = 'stff-v5';
 
 const ASSETS = [
   './',
@@ -33,6 +33,10 @@ const ASSETS = [
   './assets/sprites/ds9_sheet.png',
   './assets/sprites/asteroid_sheet.png',
   './assets/sprites/unicomplex_sheet.png',
+  './assets/bg/bg_act1.jpg',
+  './assets/bg/bg_act2.jpg',
+  './assets/bg/bg_act3.jpg',
+  './assets/bg/bg_act4.jpg',
   './assets/sprites/earth_sheet.png',
   './assets/sprites/k7_sheet.png',
   './assets/sprites/spacedock_sheet.png',
