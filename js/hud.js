@@ -67,6 +67,18 @@ const HUD = (() => {
     ctx.fillText(String(score).padStart(7,'0'),12,cy+12);
     ctx.shadowBlur=0;
 
+    // ── MUTE BUTTON (left of shield bar) ─────────────────────
+    const muteX=248, muteY=cy-13, muteW=26, muteH=26;
+    const isMuted = typeof TitleMusic!=='undefined' && TitleMusic.muted;
+    ctx.fillStyle = isMuted ? '#1a0a08' : '#081818';
+    U.rRect(ctx, muteX, muteY, muteW, muteH, 4); ctx.fill();
+    ctx.strokeStyle = isMuted ? '#ff6644' : U.rgba(CFG.C.BORDER,.6);
+    ctx.lineWidth = 1.2; U.rRect(ctx, muteX, muteY, muteW, muteH, 4); ctx.stroke();
+    ctx.font = '15px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = isMuted ? '#ff6644' : '#44ccaa';
+    ctx.fillText(isMuted ? '🔇' : '🔊', muteX + muteW/2, muteY + muteH/2 + 5);
+    ctx.textAlign = 'left';
+
     // ── SHIELD BAR (narrower: bw 460→340) ─────────────────────
     const pct=U.clamp(Player.shields/CFG.SHIELD_MAX,0,1);
     const shCol=pct>.5?CFG.C.BLUE:pct>.25?'#ffaa00':'#ff3300';

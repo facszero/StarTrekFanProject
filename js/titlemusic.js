@@ -11,6 +11,7 @@
  */
 const TitleMusic = (() => {
   let ctx       = null;   // AudioContext
+  let _muted    = false;  // user mute toggle
   let buffer    = null;   // decoded PCM
   let source    = null;   // active BufferSourceNode
   let gainNode  = null;   // for fade out
@@ -103,6 +104,13 @@ const TitleMusic = (() => {
       if (source) { try { source.stop(); } catch(e) {} source = null; }
       playing = false;
       if (gainNode) gainNode.gain.value = 0.65;
+    },
+
+    // Mute toggle — persists across title/game transitions
+    get muted() { return _muted; },
+    toggleMute() {
+      _muted = !_muted;
+      if (gainNode) gainNode.gain.value = _muted ? 0 : 0.65;
     },
   };
 })();

@@ -46,6 +46,9 @@ const CFG = {
   NOVA_RING_SPEED: 950,
   MAX_WAVES:  20,
   WAVE_PAUSE: 8.0,  // seconds between waves (breathing room + tension)
+  // Mute button bounds (top bar, left of shield bar)
+  MUTE_BTN_X: 248, MUTE_BTN_Y: 21, MUTE_BTN_W: 26, MUTE_BTN_H: 26,
+
   NOVA_BTN_X:       960,   // right side of game viewport (frame transparent)
   NOVA_BTN_Y:       480,   // lower game area, frame is transparent here
   NOVA_BTN_R:        44,   // slightly larger for mobile tap

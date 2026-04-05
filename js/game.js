@@ -52,6 +52,12 @@ const Game = (() => {
   // ── Unified tap handler ────────────────────────────────────────
   function handleTap(cx, cy) {
     if (state === 'GAME_OVER' || state === 'VICTORY') { _returnToTitle(); return; }
+    // Mute button — works in any state
+    if (cx >= CFG.MUTE_BTN_X && cx <= CFG.MUTE_BTN_X + CFG.MUTE_BTN_W &&
+        cy >= CFG.MUTE_BTN_Y && cy <= CFG.MUTE_BTN_Y + CFG.MUTE_BTN_H) {
+      if (typeof TitleMusic !== 'undefined') TitleMusic.toggleMute();
+      return;
+    }
     if (state !== 'PLAYING') { _startGame(); return; }    if (isNovaBtn(cx, cy)) { Nova.fire(Player.x, Player.y); return; }
 
     const target = findEnemyAt(cx, cy);
