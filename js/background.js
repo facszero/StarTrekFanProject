@@ -115,9 +115,12 @@ const Background = (() => {
     },
 
     clearWaveBg() {
-      // Called when leaving Act V — restore act bg
-      waveBgImg   = null;
-      waveBgAlpha = 0;
+      // Called when leaving Act V — restore act bg cleanly
+      waveBgImg    = null;
+      waveBgAlpha  = 0;
+      bgPrevImg    = null;   // drop any lingering wave crossfade
+      bgPrevAlpha  = 0;
+      bgAlpha      = 0;      // force act bg to fade in fresh
     },
 
     setTheme(t) {

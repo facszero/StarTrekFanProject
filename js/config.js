@@ -7,28 +7,28 @@ const CFG = {
 
   // ── HUD frame layout (hud_frame.png scaled to 1280x582, y-offset 69) ──
   // Frame game viewport (transparent center): x=267-1073, y=114-522
-  FRAME_Y:      69,    // y where frame is drawn
-  FRAME_H:      582,   // frame height on canvas (1483x674 → 1280x582)
+  FRAME_Y:      58,    // y where frame is drawn
+  FRAME_H:      604,   // frame height on canvas (1483x674 → 1280x582)
 
   // ── Perspective — calibrated to frame viewport ───────────────────────
   Z_SPAWN:      2800,
   Z_KILL:       60,
-  HORIZON_Y:    122,   // frame viewport top (y=114) + 8px margin
+  HORIZON_Y:    136,   // frame viewport top (y=114) + 8px margin
   PLAYER_Y:     510,   // frame viewport bottom (y=522) - 12px margin
 
   // ── Player ──────────────────────────────────────────────────────────────
-  PLAYER_X0:        670,   // center of frame viewport (267+1073)/2
-  PLAYER_Y0:        500,
-  PLAYER_Y_MIN:     175,   // frame top + 61px
-  PLAYER_Y_MAX:     510,   // frame bottom - 12px
-  PLAYER_X_MIN:     295,   // frame viewport left + 28px
-  PLAYER_X_MAX:     1055,  // frame viewport right - 18px
+  PLAYER_X0:        666,   // center of frame viewport (267+1073)/2
+  PLAYER_Y0:        495,
+  PLAYER_Y_MIN:     176,   // frame top + 61px
+  PLAYER_Y_MAX:     515,   // frame bottom - 12px
+  PLAYER_X_MIN:     280,   // frame viewport left + 28px
+  PLAYER_X_MAX:     1052,  // frame viewport right - 18px
 
   // ── HUD panel boundaries (match frame panels) ────────────────────────
-  HUD_LEFT_W:   259,   // left panel right edge
-  HUD_LEFT_H:   493,   // just below our Engineering Data items → covers frame's EPS labels
-  HUD_RIGHT_X:  1079,  // right panel left edge
-  HUD_RIGHT_H:  545,   // covers frame's Photon Torpedoes labels
+  HUD_LEFT_W:   265,   // left panel right edge
+  HUD_LEFT_H:   508,   // just below our Engineering Data items → covers frame's EPS labels
+  HUD_RIGHT_X:  1067,  // right panel left edge
+  HUD_RIGHT_H:  555,   // covers frame's Photon Torpedoes labels
   HUD_TOP_H:    110,
   PLAYER_SPEED:     520,   // px/s lateral
   PLAYER_SPEED_Y:   340,   // px/s vertical (slightly tighter than lateral)

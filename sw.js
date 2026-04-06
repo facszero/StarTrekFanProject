@@ -1,4 +1,4 @@
-const CACHE = 'stff-v7';
+const CACHE = 'stff-v8';
 
 const ASSETS = [
   './',

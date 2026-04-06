@@ -201,7 +201,8 @@ const Game = (() => {
     Projectiles.reset(); Particles.reset(); Nova.reset();
     EnemyFire.reset(); BorgAdaptation.reset();
     Story.init(); HUD.init();
-    Background.setTheme('blue'); Background.clearWaveBg();
+    Background.clearWaveBg();       // clear Act V per-wave bg FIRST
+    Background.setTheme('blue');    // then reset to Act I blue theme
     BgExplosions.reset();
     state = 'TITLE';
     TitleMusic.playTitle();
@@ -322,7 +323,7 @@ const Game = (() => {
     ctx.fillText('FINAL SCORE: '+String(score).padStart(7,'0'),CFG.W/2,CFG.H/2+24);
     if (Math.sin(Date.now()/580)>0) {
       ctx.fillStyle=CFG.C.TEXT; ctx.font='17px "Courier New"';
-      ctx.fillText('[ TAP OR PRESS ENTER ]',CFG.W/2,CFG.H/2+86);
+      ctx.fillText('[ TAP OR PRESS ENTER TO RETURN TO TITLE ]',CFG.W/2,CFG.H/2+86);
     }
     ctx.textAlign='left';
   }
@@ -370,7 +371,7 @@ const Game = (() => {
     ctx.fillText('FINAL SCORE: '+String(score).padStart(7,'0'),cx,cy+90);
     if(Math.sin(Date.now()/500)>0){
       ctx.fillStyle=CFG.C.TEXT; ctx.font='bold 15px monospace';
-      ctx.fillText('[ TAP OR PRESS ENTER TO PLAY AGAIN ]',cx,cy+140);
+      ctx.fillText('[ TAP OR PRESS ENTER TO RETURN TO TITLE ]',cx,cy+140);
     }
     ctx.textAlign='left'; ctx.restore();
   }
